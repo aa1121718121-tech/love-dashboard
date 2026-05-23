@@ -28,6 +28,13 @@ body {
   display: flex;
   justify-content: center;
 }
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: url('bg.jpg') center/cover no-repeat;
+  opacity: .25;
+  z-index: -1;
+}
 .app {
   width: 100%; max-width: 480px;
   padding: 0 16px calc(var(--nav-h) + 20px);
