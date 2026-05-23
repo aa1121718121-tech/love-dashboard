@@ -152,7 +152,8 @@ body::before {
 .weather-temp { font-size: 2em; font-weight: 300; line-height: 1; }
 .weather-desc { font-size: .82em; color: var(--text-lighter); }
 .weather-detail { display: flex; gap: 14px; font-size: .78em; color: var(--text-lighter); margin-bottom: 10px; }
-.clothing-tip { padding: 10px 14px; background: rgba(255,167,38,.1); border-radius: var(--radius-sm); font-size: .82em; border: 1px solid rgba(255,167,38,.15); }
+.clothing-tip { padding: 12px 14px; background: rgba(255,167,38,.1); border-radius: var(--radius-sm); font-size: .82em; border: 1px solid rgba(255,167,38,.15); }
+.clothing-tip .cloth-row { display:flex; align-items:center; gap:8px; margin:3px 0; }
 .weather-city-row { display:flex; gap:8px; margin-top:10px; }
 .weather-city-row input { flex:1; padding:9px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
 .weather-city-row input::placeholder { color:#555; }
@@ -579,16 +580,18 @@ async function fetchWeather(lat, lon) {
     const temp = Math.round(cw.temperature), code = cw.weathercode;
     const map = {0:['☀️','晴天'],1:['🌤','大部晴'],2:['⛅','多云'],3:['☁️','阴天'],45:['🌫','雾'],48:['🌫','雾凇'],51:['🌦','小雨'],53:['🌦','小雨'],55:['🌦','小雨'],61:['🌧','小雨'],63:['🌧','中雨'],65:['🌧','大雨'],71:['❄️','小雪'],73:['❄️','中雪'],75:['❄️','大雪'],80:['🌦','阵雨'],81:['🌧','阵雨'],82:['🌧','大阵雨'],85:['❄️','小雪'],86:['❄️','大雪'],95:['⛈','雷暴'],96:['⛈','雷暴冰雹'],99:['⛈','雷暴冰雹']};
     const [icon, desc] = map[code] || ['🌡','--'];
-    let cloth = '';
-    if (temp < 0) cloth = '厚羽绒服 + 围巾 + 手套';
-    else if (temp < 5) cloth = '羽绒服 + 厚毛衣 + 围巾';
-    else if (temp < 10) cloth = '厚外套 + 毛衣';
-    else if (temp < 15) cloth = '薄外套 + 长袖';
-    else if (temp < 20) cloth = '薄长袖 / 短袖+薄外套';
-    else if (temp < 25) cloth = '短袖 + 薄长裤 / 连衣裙';
-    else if (temp < 30) cloth = '短袖短裤 / 裙子 + 防晒';
-    else cloth = '轻薄透气 + 防晒霜 + 遮阳伞';
-    if ([51,53,55,61,63,65,80,81,82,95,96,99].includes(code)) cloth += ' · 🌂 带伞';
+    function getClothingAdvice(temp, code) {
+      const rainy = [51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
+      if (temp < 0) return { top: '厚羽绒服 / 加厚棉衣', bottom: '加绒裤 / 棉裤', acc: '围巾🧣 + 手套🧤 + 帽子🎩', extra: rainy ? '🌂 带伞' : '' };
+      if (temp < 5) return { top: '羽绒服 / 棉服', bottom: '厚长裤 / 加绒裤', acc: '围巾🧣 + 手套🧤', extra: rainy ? '🌂 带伞' : '' };
+      if (temp < 10) return { top: '厚外套 / 呢大衣', bottom: '长裤 / 牛仔裤', acc: '围巾🧣', extra: rainy ? '🌂 带伞' : '' };
+      if (temp < 15) return { top: '薄外套 / 风衣 / 夹克', bottom: '长裤', acc: '可备薄围巾', extra: rainy ? '🌂 带伞' : '' };
+      if (temp < 20) return { top: '长袖T恤 / 薄卫衣', bottom: '长裤 / 长裙', acc: '随身带薄外套', extra: rainy ? '🌂 带伞' : '' };
+      if (temp < 25) return { top: '短袖 / 衬衫', bottom: '薄长裤 / 半身裙 / 连衣裙', acc: '', extra: rainy ? '🌂 带伞' : '' };
+      if (temp < 30) return { top: '短袖 / 吊带', bottom: '短裤 / 短裙', acc: '🧴 注意防晒', extra: rainy ? '🌂 带伞' : '' };
+      return { top: '轻薄短袖 / 背心', bottom: '短裤 / 薄裙', acc: '🧴 防晒霜 + 遮阳伞', extra: rainy ? '🌂 带伞' : '' };
+    }
+    const cloth = getClothingAdvice(temp, code);
     document.getElementById('weatherContent').innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <span style="font-weight:600;">📍 ${escHtml(D.city)}</span>
@@ -599,7 +602,13 @@ async function fetchWeather(lat, lon) {
         <div class="weather-main-info"><div class="weather-temp">${temp}°C</div><div class="weather-desc">${desc}</div></div>
       </div>
       <div class="weather-detail"><span>💨 ${cw.windspeed} km/h</span><span>🌡 ${Math.round(daily.temperature_2m_max[0])}° / ${Math.round(daily.temperature_2m_min[0])}°</span></div>
-      <div class="clothing-tip">👗 穿搭建议：${cloth}</div>
+      <div class="clothing-tip">
+        <div style="font-weight:600;margin-bottom:6px;">👗 今日穿搭建议</div>
+        <div class="cloth-row">👕 上衣：${cloth.top}</div>
+        <div class="cloth-row">👖 下装：${cloth.bottom}</div>
+        ${cloth.acc ? `<div class="cloth-row">🎒 配饰：${cloth.acc}</div>` : ''}
+        ${cloth.extra ? `<div class="cloth-row">${cloth.extra}</div>` : ''}
+      </div>
       <div class="weather-city-row" style="margin-top:10px;"><input type="text" id="cityInput2" placeholder="更换城市..."><button onclick="fetchWeatherByCity()">查询</button></div>`;
   } catch(e) { renderWeatherError('获取天气失败'); }
 }
