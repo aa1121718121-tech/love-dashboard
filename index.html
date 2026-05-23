@@ -14,9 +14,10 @@
   --blue-light: #b3e5fc;
   --text: #eee;
   --text-light: #aaa;
-  --text-lighter: #888;
+  --text-lighter: #777;
   --radius: 20px;
   --radius-sm: 14px;
+  --nav-h: 68px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -28,65 +29,66 @@ body {
   justify-content: center;
 }
 .app {
-  width: 100%;
-  max-width: 480px;
-  padding: 0 16px 100px;
-  position: relative;
-  overflow-x: hidden;
+  width: 100%; max-width: 480px;
+  padding: 0 16px calc(var(--nav-h) + 20px);
+  position: relative; overflow-x: hidden;
 }
 
-/* ===== STARS BACKGROUND ===== */
+/* ===== STARS ===== */
 .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
 .star { position:absolute; background:#fff; border-radius:50%; animation:twinkle 2s ease-in-out infinite; }
 @keyframes twinkle { 0%,100%{opacity:.3;} 50%{opacity:1;} }
 
-/* ===== HERO HEADER ===== */
-.hero {
-  position: relative; z-index: 1;
-  text-align: center; padding: 50px 0 20px;
-  min-height: 340px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+/* ===== HEADER ===== */
+.header-bar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 0 12px;
+  background: var(--bg);
 }
+.header-bar .title { font-size: 1.2em; font-weight: 700; }
+.header-bar .title .pink { color: var(--pink); }
+.header-bar .settings-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  color: #fff; font-size: 1.1em; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; transition: transform .3s;
+}
+.header-bar .settings-btn:active { transform: rotate(90deg); }
+
+/* ===== HERO (only on home tab) ===== */
+.hero { display: none; position: relative; text-align: center; padding: 10px 0 20px; }
+.hero.show { display: block; }
 .hero-moon {
-  position: absolute; top: 30px; right: 30px;
-  width: 50px; height: 50px;
+  position: absolute; top: 0; right: 20px;
+  width: 44px; height: 44px;
   background: radial-gradient(circle at 35% 35%, #fff9c4, #ffcc80);
   border-radius: 50%;
-  box-shadow: 0 0 40px #ffcc8055, 0 0 80px #ffcc8033;
+  box-shadow: 0 0 30px #ffcc8055, 0 0 60px #ffcc8033;
 }
-.hero-clouds { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-.hero-cloud {
-  position: absolute; background: rgba(255,255,255,.04);
-  border-radius: 50px;
-}
-.hero-avatars {
-  position: relative; width: 180px; height: 140px; margin: 0 auto 16px;
-}
+.hero-avatars { position: relative; width: 160px; height: 120px; margin: 0 auto 12px; }
 .hero-avatar {
-  position: absolute; bottom: 0;
-  font-size: 70px;
+  position: absolute; bottom: 0; font-size: 60px;
   animation: bounce 2.5s ease-in-out infinite;
 }
-.hero-avatar.left { left: 5px; animation-delay: 0s; }
+.hero-avatar.left { left: 5px; }
 .hero-avatar.right { right: 5px; animation-delay: .3s; }
 @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
 .hero-heart {
-  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-  font-size: 24px; animation: pulse 1.5s ease-in-out infinite;
+  position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+  font-size: 22px; animation: pulse 1.5s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.2);} }
-.hero-title { font-size: 2em; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px; }
-.hero-title .pink { color: var(--pink); }
-.hero-subtitle { font-size: .85em; color: var(--text-lighter); margin-bottom: 12px; }
-.hero-date-badge {
-  display: inline-block; padding: 6px 18px;
-  background: rgba(255,255,255,.08); border-radius: 20px;
-  font-size: .85em; color: var(--text-light); letter-spacing: 1px;
-}
+.hero-title { font-size: 1.7em; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px; }
+.hero-subtitle { font-size: .8em; color: var(--text-lighter); margin-bottom: 10px; }
+
+/* ===== TAB PANELS ===== */
+.tab-panel { display: none; position: relative; z-index: 1; }
+.tab-panel.active { display: block; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 
 /* ===== CARDS ===== */
 .card {
-  position: relative; z-index: 1;
   background: var(--card-bg);
   border-radius: var(--radius);
   padding: 20px;
@@ -97,376 +99,288 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 14px;
 }
-.card-header h2 { font-size: 1.05em; font-weight: 700; }
-.card-header .badge {
-  font-size: .75em; padding: 4px 12px; border-radius: 12px;
-  background: rgba(255,255,255,.08); color: var(--text-light);
-}
+.card-header h2 { font-size: 1em; font-weight: 700; }
+.card-header .badge { font-size: .7em; padding: 4px 10px; border-radius: 10px; background: rgba(255,255,255,.08); color: var(--text-light); }
 
-/* ===== LOVE TIMER CARD ===== */
+/* ----- LOVE TIMER ----- */
 .love-timer-card {
-  background: linear-gradient(135deg, #e91e63, #c2185b);
-  border: none;
-  text-align: center; padding: 24px 20px;
+  background: linear-gradient(135deg, #e91e63, #c2185b); border: none;
+  text-align: center; padding: 22px 20px;
 }
-.love-timer-card .label { font-size: .85em; opacity: .85; margin-bottom: 8px; }
+.love-timer-card .label { font-size: .82em; opacity: .85; margin-bottom: 6px; }
 .love-timer-card .timer {
-  font-size: 2.2em; font-weight: 800; letter-spacing: 2px;
+  font-size: 2em; font-weight: 800; letter-spacing: 2px;
   font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
 }
-.love-timer-card .timer .unit { font-size: .45em; font-weight: 400; opacity: .8; margin: 0 2px; }
-.love-progress { margin-top: 14px; }
-.love-progress-bar {
-  height: 6px; background: rgba(255,255,255,.25); border-radius: 3px;
-  overflow: hidden; margin-bottom: 6px;
-}
-.love-progress-fill {
-  height: 100%; background: #fff; border-radius: 3px;
-  transition: width .5s;
-}
-.love-progress-label { font-size: .75em; opacity: .8; }
+.love-timer-card .timer .unit { font-size: .42em; font-weight: 400; opacity: .8; margin: 0 2px; }
+.love-progress { margin-top: 12px; }
+.love-progress-bar { height: 5px; background: rgba(255,255,255,.25); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+.love-progress-fill { height: 100%; background: #fff; border-radius: 3px; transition: width .5s; }
+.love-progress-label { font-size: .7em; opacity: .8; }
 
-/* ===== ANNIVERSARY CARD ===== */
+/* ----- ANNIVERSARY ----- */
 .anni-card { text-align: center; }
-.anni-illustration {
-  display: flex; align-items: center; justify-content: center; gap: 16px;
-  margin-bottom: 16px;
-}
-.anni-people { font-size: 48px; }
-.anni-umbrella { font-size: 36px; }
-.anni-highlight {
-  display: inline-block; padding: 14px 28px;
-  background: linear-gradient(135deg, rgba(233,30,99,.2), rgba(233,30,99,.08));
-  border-radius: 50px;
-  margin: 8px 0;
-}
-.anni-highlight .num { font-size: 2em; font-weight: 800; color: var(--pink); }
-.anni-highlight .txt { font-size: .8em; color: var(--text-light); }
-.anni-date { color: var(--text-lighter); font-size: .85em; margin-top: 6px; }
-
-/* ===== TODO CARD ===== */
-.todo-item { display:flex; align-items:center; gap:12px; padding:10px 0; }
-.todo-item + .todo-item { border-top: 1px solid rgba(255,255,255,.04); }
-.todo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.todo-dot.male { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
-.todo-dot.female { background: var(--pink); box-shadow: 0 0 6px var(--pink); }
-.todo-text { flex: 1; font-size: .9em; }
-.todo-item.done .todo-text { text-decoration: line-through; color: var(--text-lighter); }
-.todo-cb {
-  width: 20px; height: 20px; border-radius: 6px; border: 2px solid #555;
-  appearance: none; cursor: pointer; flex-shrink: 0; position: relative;
-}
-.todo-cb:checked {
-  background: var(--pink); border-color: var(--pink);
-}
-.todo-cb:checked::after {
-  content: '✓'; position: absolute; top: -2px; left: 3px;
-  color: #fff; font-size: 13px; font-weight: 700;
-}
-.todo-del { background:none; border:none; color:#555; cursor:pointer; font-size:1em; padding:4px; }
-.todo-del:hover { color: #e53935; }
-.todo-input-row { display:flex; gap:8px; margin-top:12px; }
-.todo-input-row select {
-  padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-}
-.todo-input-row input {
-  flex: 1; padding: 8px 12px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-}
-.todo-input-row input::placeholder { color: #666; }
-.todo-input-row button {
-  padding: 8px 16px; border-radius: 8px; border: none;
-  background: var(--pink); color: #fff; font-size: .85em; cursor: pointer;
+.anni-illustration { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 14px; }
+.anni-people { font-size: 44px; }
+.anni-umbrella { font-size: 32px; }
+.anni-highlight { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, rgba(233,30,99,.2), rgba(233,30,99,.08)); border-radius: 50px; margin: 6px 0; }
+.anni-highlight .num { font-size: 1.8em; font-weight: 800; color: var(--pink); }
+.anni-highlight .txt { font-size: .75em; color: var(--text-light); }
+.anni-date { color: var(--text-lighter); font-size: .8em; margin-top: 4px;
 }
 
-/* ===== MESSAGES CARD ===== */
-.messages-list { max-height: 260px; overflow-y: auto; }
-.msg-date-sep {
-  text-align: center; color: var(--text-lighter); font-size: .75em;
-  padding: 8px 0; position: relative;
-}
-.msg-date-sep::before, .msg-date-sep::after {
-  content: ''; position: absolute; top: 50%; width: 30%; height: 1px;
-  background: rgba(255,255,255,.1);
-}
-.msg-date-sep::before { left: 0; }
-.msg-date-sep::after { right: 0; }
-.msg-bubble {
-  max-width: 80%; padding: 10px 14px; border-radius: 16px;
-  margin-bottom: 8px; font-size: .88em; position: relative;
-}
-.msg-bubble.male { background: rgba(79,195,247,.15); margin-right: auto; border-bottom-left-radius: 4px; }
-.msg-bubble.female { background: rgba(233,30,99,.15); margin-left: auto; border-bottom-right-radius: 4px; text-align: right; }
-.msg-bubble .author { font-size: .7em; opacity: .6; margin-bottom: 2px; }
-.msg-input-row { display:flex; gap:8px; margin-top:12px; }
-.msg-input-row select {
-  padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-}
-.msg-input-row input {
-  flex: 1; padding: 8px 12px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-}
-.msg-input-row input::placeholder { color: #666; }
-.msg-input-row button {
-  padding: 8px 16px; border-radius: 8px; border: none;
-  background: var(--pink); color: #fff; font-size: .85em; cursor: pointer;
-}
-
-/* ===== PERIOD CARD ===== */
-.period-top { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
-.period-ring {
-  width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0;
-  position: relative; display: flex; align-items: center; justify-content: center;
-}
-.period-ring-inner {
-  width: 60px; height: 60px; border-radius: 50%;
-  background: var(--card-bg);
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column;
-}
-.period-ring-inner .days { font-size: 1.4em; font-weight: 700; }
-.period-ring-inner .sub { font-size: .6em; color: var(--text-lighter); }
-.period-info { flex: 1; }
-.period-info .status { font-weight: 700; font-size: .95em; margin-bottom: 4px; }
-.period-info .status.normal { color: #66bb6a; }
-.period-info .status.warning { color: #ffa726; }
-.period-info .status.active { color: #ef5350; }
-.period-info .dates { font-size: .8em; color: var(--text-lighter); }
-.period-input-row { display:flex; gap:8px; margin-top:12px; }
-.period-input-row input {
-  flex: 1; padding: 8px 12px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-  color-scheme: dark;
-}
-.period-input-row button {
-  padding: 8px 16px; border-radius: 8px; border: none;
-  background: var(--pink); color: #fff; font-size: .85em; cursor: pointer;
-}
-.period-history { margin-top: 10px; }
-.period-history .ph-item {
-  display: flex; justify-content: space-between; font-size: .8em;
-  padding: 4px 0; color: var(--text-lighter);
-}
-
-/* ===== WEIGHT CARD ===== */
-.weight-dual { display: flex; gap: 12px; }
-.weight-person-card {
-  flex: 1; padding: 14px; border-radius: var(--radius-sm);
-  text-align: center;
-}
-.weight-person-card.male { background: rgba(79,195,247,.08); }
-.weight-person-card.female { background: rgba(233,30,99,.08); }
-.weight-person-card .w-name { font-size: .85em; color: var(--text-light); margin-bottom: 6px; }
-.weight-person-card .w-val { font-size: 1.6em; font-weight: 700; }
-.weight-person-card.male .w-val { color: var(--blue); }
-.weight-person-card.female .w-val { color: var(--pink); }
-.weight-person-card .w-unit { font-size: .5em; font-weight: 400; opacity: .7; }
-.weight-person-card .w-bmi { font-size: .8em; color: var(--text-lighter); margin-top: 4px; }
-.weight-input-row { display:flex; gap:8px; margin-top:12px; }
-.weight-input-row input {
-  flex: 1; padding: 8px 12px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-}
-.weight-input-row select {
-  padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-}
-.weight-input-row button {
-  padding: 8px 16px; border-radius: 8px; border: none;
-  background: var(--pink); color: #fff; font-size: .85em; cursor: pointer;
-}
-
-/* ===== WEATHER CARD ===== */
-.weather-top { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
-.weather-icon { font-size: 3em; }
+/* ===== WEATHER ===== */
+.weather-top { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.weather-icon { font-size: 2.6em; }
 .weather-main-info { flex: 1; }
-.weather-temp { font-size: 2.2em; font-weight: 300; line-height: 1; }
-.weather-desc { font-size: .85em; color: var(--text-lighter); }
-.weather-detail { display: flex; gap: 16px; font-size: .8em; color: var(--text-lighter); }
-.clothing-tip {
-  padding: 10px 14px; background: rgba(255,167,38,.1);
-  border-radius: var(--radius-sm); font-size: .85em;
-  border: 1px solid rgba(255,167,38,.15);
-}
+.weather-temp { font-size: 2em; font-weight: 300; line-height: 1; }
+.weather-desc { font-size: .82em; color: var(--text-lighter); }
+.weather-detail { display: flex; gap: 14px; font-size: .78em; color: var(--text-lighter); margin-bottom: 10px; }
+.clothing-tip { padding: 10px 14px; background: rgba(255,167,38,.1); border-radius: var(--radius-sm); font-size: .82em; border: 1px solid rgba(255,167,38,.15); }
 .weather-city-row { display:flex; gap:8px; margin-top:10px; }
-.weather-city-row input {
-  flex: 1; padding: 8px 12px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.05); color: #fff; font-size: .85em;
-}
-.weather-city-row input::placeholder { color: #666; }
-.weather-city-row button {
-  padding: 8px 16px; border-radius: 8px; border: none;
-  background: var(--pink); color: #fff; font-size: .85em; cursor: pointer;
-}
+.weather-city-row input { flex:1; padding:9px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
+.weather-city-row input::placeholder { color:#555; }
+.weather-city-row button { padding:9px 16px; border-radius:8px; border:none; background:var(--pink); color:#fff; font-size:.85em; cursor:pointer; }
 
-/* ===== SETTINGS BUTTON ===== */
-.settings-btn {
-  position: fixed; top: 16px; right: 16px; z-index: 100;
-  width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
-  color: #fff; font-size: 1.2em; cursor: pointer;
-  backdrop-filter: blur(10px); transition: transform .3s;
+/* ===== WEIGHT ===== */
+.weight-dual { display: flex; gap: 12px; }
+.weight-person-card { flex:1; padding:14px; border-radius:var(--radius-sm); text-align:center; }
+.weight-person-card.male { background:rgba(79,195,247,.08); }
+.weight-person-card.female { background:rgba(233,30,99,.08); }
+.weight-person-card .w-name { font-size:.82em; color:var(--text-light); margin-bottom:4px; }
+.weight-person-card .w-val { font-size:1.5em; font-weight:700; }
+.weight-person-card.male .w-val { color:var(--blue); }
+.weight-person-card.female .w-val { color:var(--pink); }
+.weight-person-card .w-unit { font-size:.48em; font-weight:400; opacity:.7; }
+.weight-person-card .w-bmi { font-size:.76em; color:var(--text-lighter); margin-top:3px; }
+.weight-input-row { display:flex; gap:8px; margin-top:12px; }
+.weight-input-row input { flex:1; padding:9px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
+.weight-input-row select { padding:9px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
+.weight-input-row button { padding:9px 16px; border-radius:8px; border:none; background:var(--pink); color:#fff; font-size:.85em; cursor:pointer; }
+
+/* ===== TODO ===== */
+.todo-item { display:flex; align-items:center; gap:12px; padding:10px 0; }
+.todo-item + .todo-item { border-top:1px solid rgba(255,255,255,.04); }
+.todo-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.todo-dot.male { background:var(--blue); box-shadow:0 0 6px var(--blue); }
+.todo-dot.female { background:var(--pink); box-shadow:0 0 6px var(--pink); }
+.todo-text { flex:1; font-size:.88em; }
+.todo-item.done .todo-text { text-decoration:line-through; color:var(--text-lighter); }
+.todo-cb { width:20px; height:20px; border-radius:6px; border:2px solid #555; appearance:none; cursor:pointer; flex-shrink:0; position:relative; }
+.todo-cb:checked { background:var(--pink); border-color:var(--pink); }
+.todo-cb:checked::after { content:'✓'; position:absolute; top:-2px; left:3px; color:#fff; font-size:13px; font-weight:700; }
+.todo-del { background:none; border:none; color:#555; cursor:pointer; font-size:1em; padding:4px; }
+.todo-del:hover { color:#e53935; }
+.todo-input-row { display:flex; gap:8px; margin-top:12px; }
+.todo-input-row select { padding:9px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
+.todo-input-row input { flex:1; padding:9px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
+.todo-input-row input::placeholder { color:#555; }
+.todo-input-row button { padding:9px 16px; border-radius:8px; border:none; background:var(--pink); color:#fff; font-size:.85em; cursor:pointer; }
+
+/* ===== MESSAGES ===== */
+.messages-list { max-height:340px; overflow-y:auto; }
+.msg-date-sep { text-align:center; color:var(--text-lighter); font-size:.72em; padding:8px 0; position:relative; }
+.msg-date-sep::before, .msg-date-sep::after { content:''; position:absolute; top:50%; width:28%; height:1px; background:rgba(255,255,255,.08); }
+.msg-date-sep::before { left:0; }
+.msg-date-sep::after { right:0; }
+.msg-bubble { max-width:82%; padding:10px 14px; border-radius:16px; margin-bottom:8px; font-size:.85em; }
+.msg-bubble.male { background:rgba(79,195,247,.15); margin-right:auto; border-bottom-left-radius:4px; }
+.msg-bubble.female { background:rgba(233,30,99,.15); margin-left:auto; border-bottom-right-radius:4px; text-align:right; }
+.msg-bubble .author { font-size:.68em; opacity:.6; margin-bottom:2px; }
+.msg-input-row { display:flex; gap:8px; margin-top:12px; }
+.msg-input-row select { padding:9px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
+.msg-input-row input { flex:1; padding:9px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; }
+.msg-input-row input::placeholder { color:#555; }
+.msg-input-row button { padding:9px 16px; border-radius:8px; border:none; background:var(--pink); color:#fff; font-size:.85em; cursor:pointer; }
+
+/* ===== PERIOD ===== */
+.period-top { display:flex; align-items:center; gap:16px; margin-bottom:14px; }
+.period-ring { width:80px; height:80px; border-radius:50%; flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; }
+.period-ring-inner { width:60px; height:60px; border-radius:50%; background:var(--card-bg); display:flex; align-items:center; justify-content:center; flex-direction:column; }
+.period-ring-inner .days { font-size:1.3em; font-weight:700; }
+.period-ring-inner .sub { font-size:.58em; color:var(--text-lighter); }
+.period-info { flex:1; }
+.period-info .status { font-weight:700; font-size:.9em; margin-bottom:3px; }
+.period-input-row { display:flex; gap:8px; margin-top:12px; }
+.period-input-row input { flex:1; padding:9px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.85em; color-scheme:dark; }
+.period-input-row button { padding:9px 16px; border-radius:8px; border:none; background:var(--pink); color:#fff; font-size:.85em; cursor:pointer; }
+.period-history { margin-top:10px; }
+.ph-item { display:flex; justify-content:space-between; font-size:.78em; padding:3px 0; color:var(--text-lighter); }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  height:var(--nav-h);
+  background:rgba(26,26,46,.95); backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,.06);
+  display:flex; align-items:center; justify-content:space-around;
+  z-index:100; padding:0 4px;
 }
-.settings-btn:hover { transform: rotate(90deg); }
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:none; border:none; color:var(--text-lighter);
+  font-size:.65em; cursor:pointer; padding:8px 6px;
+  transition:color .2s; min-width:52px;
+}
+.nav-item .nav-icon { font-size:1.5em; transition:transform .2s; }
+.nav-item.active { color:var(--pink); }
+.nav-item.active .nav-icon { transform:scale(1.15); }
+.nav-item:active .nav-icon { transform:scale(.9); }
 
 /* ===== MODAL ===== */
-.modal-overlay {
-  display:none; position:fixed; inset:0; z-index:200;
-  background:rgba(0,0,0,.7); justify-content:center; align-items:center;
-}
+.modal-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.7); justify-content:center; align-items:center; }
 .modal-overlay.show { display:flex; }
-.modal {
-  background: #252540; border-radius: var(--radius); padding: 28px;
-  max-width: 400px; width: 90%; max-height: 85vh; overflow-y: auto;
-  border: 1px solid rgba(255,255,255,.1); color: #fff;
-}
-.modal h2 { margin-bottom: 20px; font-size: 1.2em; }
-.form-group { margin-bottom: 14px; }
-.form-group label { display:block; font-size:.8em; color:var(--text-lighter); margin-bottom:4px; }
-.form-group input {
-  width:100%; padding:10px 12px; border-radius:8px;
-  border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05);
-  color:#fff; font-size:.9em;
-}
-.modal button[type=submit] {
-  width:100%; padding:12px; background:var(--pink); color:#fff;
-  border:none; border-radius:8px; font-size:.95em; cursor:pointer; margin-top:4px;
-}
-.modal .close-btn {
-  float:right; background:none; border:none; font-size:1.3em;
-  cursor:pointer; color:#888; line-height:1;
-}
+.modal { background:#252540; border-radius:var(--radius); padding:26px; max-width:400px; width:90%; max-height:85vh; overflow-y:auto; border:1px solid rgba(255,255,255,.1); color:#fff; }
+.modal h2 { margin-bottom:18px; font-size:1.1em; }
+.form-group { margin-bottom:13px; }
+.form-group label { display:block; font-size:.78em; color:var(--text-lighter); margin-bottom:3px; }
+.form-group input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:#fff; font-size:.88em; }
+.modal button[type=submit] { width:100%; padding:12px; background:var(--pink); color:#fff; border:none; border-radius:8px; font-size:.9em; cursor:pointer; margin-top:2px; }
+.modal .close-btn { float:right; background:none; border:none; font-size:1.2em; cursor:pointer; color:#888; line-height:1; }
 
 /* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
-::-webkit-scrollbar-track { background: transparent; }
-
-/* ===== RESPONSIVE ===== */
-@media (min-width: 769px) {
-  .app { padding-bottom: 40px; }
-}
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
 </style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
 
-<button class="settings-btn" onclick="openSettings()">⚙</button>
-
 <div class="app">
 
-  <!-- ===== HERO HEADER ===== -->
-  <div class="hero">
-    <div class="hero-moon"></div>
-    <div class="hero-clouds">
-      <div class="hero-cloud" style="top:15%;left:5%;width:80px;height:24px;"></div>
-      <div class="hero-cloud" style="top:22%;right:8%;width:100px;height:20px;"></div>
-      <div class="hero-cloud" style="top:8%;left:40%;width:60px;height:16px;"></div>
-    </div>
-    <div class="hero-avatars">
-      <span class="hero-avatar left">👦</span>
-      <span class="hero-heart">💕</span>
-      <span class="hero-avatar right">👧</span>
-    </div>
-    <h1 class="hero-title"><span class="pink">Love</span> Story</h1>
-    <p class="hero-subtitle">我们的点点滴滴</p>
-    <div class="hero-date-badge" id="heroDate">📅 2025.01.15</div>
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="title"><span class="pink">Love</span> Story</div>
+    <button class="settings-btn" onclick="openSettings()">⚙</button>
   </div>
 
-  <!-- ===== 在一起的时间 ===== -->
-  <div class="card love-timer-card">
-    <div class="label">💗 我们已经相爱了</div>
-    <div class="timer" id="loveTimer">--</div>
-    <div class="love-progress">
-      <div class="love-progress-bar">
-        <div class="love-progress-fill" id="loveProgressFill" style="width:0%"></div>
+  <!-- ===== TAB: 首页 ===== -->
+  <div class="tab-panel active" id="tab-home">
+    <div class="hero show">
+      <div class="hero-moon"></div>
+      <div class="hero-avatars">
+        <span class="hero-avatar left">👦</span>
+        <span class="hero-heart">💕</span>
+        <span class="hero-avatar right">👧</span>
       </div>
-      <div class="love-progress-label" id="loveProgressLabel">恋爱ing</div>
+      <p class="hero-subtitle">我们的点点滴滴</p>
     </div>
-  </div>
-
-  <!-- ===== 纪念日 ===== -->
-  <div class="card anni-card">
-    <div class="card-header"><h2>💍 纪念日</h2></div>
-    <div class="anni-illustration">
-      <span class="anni-people">👦</span>
-      <span class="anni-umbrella">☂️</span>
-      <span class="anni-people">👧</span>
-    </div>
-    <div class="anni-highlight">
-      <div class="num" id="anniDays">--</div>
-      <div class="txt">天</div>
-    </div>
-    <div class="anni-date" id="anniDate">在一起 · 2025.01.15</div>
-  </div>
-
-  <!-- ===== TODO 清单 ===== -->
-  <div class="card">
-    <div class="card-header">
-      <h2>📋 TODO 清单</h2>
-      <span class="badge" id="todoCount">0项</span>
-    </div>
-    <div id="todoList"></div>
-    <div class="todo-input-row">
-      <select id="todoPerson"></select>
-      <input type="text" id="todoInput" placeholder="添加待办...">
-      <button onclick="addTodo()">＋</button>
-    </div>
-  </div>
-
-  <!-- ===== 留言板 ===== -->
-  <div class="card">
-    <div class="card-header"><h2>💬 留言板</h2></div>
-    <div class="messages-list" id="messagesList"></div>
-    <div class="msg-input-row">
-      <select id="msgAuthor"></select>
-      <input type="text" id="msgInput" placeholder="说点什么...">
-      <button onclick="addMessage()">发送</button>
-    </div>
-  </div>
-
-  <!-- ===== 经期记录 ===== -->
-  <div class="card">
-    <div class="card-header"><h2>📅 经期记录</h2></div>
-    <div class="period-top" id="periodTop"></div>
-    <div class="period-input-row">
-      <input type="date" id="periodDate">
-      <button onclick="addPeriod()">记录开始</button>
-    </div>
-    <div class="period-history" id="periodHistory"></div>
-  </div>
-
-  <!-- ===== 体重记录 ===== -->
-  <div class="card">
-    <div class="card-header"><h2>⚖️ 体重记录</h2></div>
-    <div class="weight-dual" id="weightDual"></div>
-    <div class="weight-input-row">
-      <input type="number" id="weightInput" placeholder="体重(kg)" step="0.1">
-      <select id="weightPerson"></select>
-      <button onclick="addWeight()">记录</button>
-    </div>
-  </div>
-
-  <!-- ===== 今日天气 ===== -->
-  <div class="card">
-    <div class="card-header"><h2>🌤 今日天气</h2></div>
-    <div id="weatherContent">
-      <div class="weather-city-row">
-        <input type="text" id="cityInput" placeholder="输入城市名...">
-        <button onclick="fetchWeatherByCity()">查询</button>
+    <div class="card love-timer-card">
+      <div class="label">💗 我们已经相爱了</div>
+      <div class="timer" id="loveTimer">--</div>
+      <div class="love-progress">
+        <div class="love-progress-bar"><div class="love-progress-fill" id="loveProgressFill" style="width:0%"></div></div>
+        <div class="love-progress-label" id="loveProgressLabel">恋爱ing</div>
       </div>
+    </div>
+    <div class="card anni-card">
+      <div class="card-header"><h2>💍 纪念日</h2></div>
+      <div class="anni-illustration">
+        <span class="anni-people">👦</span>
+        <span class="anni-umbrella">☂️</span>
+        <span class="anni-people">👧</span>
+      </div>
+      <div class="anni-highlight">
+        <div class="num" id="anniDays">--</div>
+        <div class="txt">天</div>
+      </div>
+      <div class="anni-date" id="anniDate"></div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: 天气 ===== -->
+  <div class="tab-panel" id="tab-weather">
+    <div class="card">
+      <div class="card-header"><h2>🌤 今日天气</h2></div>
+      <div id="weatherContent">
+        <div class="weather-city-row">
+          <input type="text" id="cityInput" placeholder="输入城市名...">
+          <button onclick="fetchWeatherByCity()">查询</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: 体重 ===== -->
+  <div class="tab-panel" id="tab-weight">
+    <div class="card">
+      <div class="card-header"><h2>⚖️ 体重记录</h2></div>
+      <div class="weight-dual" id="weightDual"></div>
+      <div class="weight-input-row">
+        <input type="number" id="weightInput" placeholder="体重(kg)" step="0.1">
+        <select id="weightPerson"></select>
+        <button onclick="addWeight()">记录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: 待办 ===== -->
+  <div class="tab-panel" id="tab-todo">
+    <div class="card">
+      <div class="card-header">
+        <h2>📋 TODO 清单</h2>
+        <span class="badge" id="todoCount">0项</span>
+      </div>
+      <div id="todoList"></div>
+      <div class="todo-input-row">
+        <select id="todoPerson"></select>
+        <input type="text" id="todoInput" placeholder="添加待办...">
+        <button onclick="addTodo()">＋</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: 留言 ===== -->
+  <div class="tab-panel" id="tab-messages">
+    <div class="card">
+      <div class="card-header"><h2>💬 留言板</h2></div>
+      <div class="messages-list" id="messagesList"></div>
+      <div class="msg-input-row">
+        <select id="msgAuthor"></select>
+        <input type="text" id="msgInput" placeholder="说点什么...">
+        <button onclick="addMessage()">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: 经期 ===== -->
+  <div class="tab-panel" id="tab-period">
+    <div class="card">
+      <div class="card-header"><h2>📅 经期记录</h2></div>
+      <div class="period-top" id="periodTop"></div>
+      <div class="period-input-row">
+        <input type="date" id="periodDate">
+        <button onclick="addPeriod()">记录开始</button>
+      </div>
+      <div class="period-history" id="periodHistory"></div>
     </div>
   </div>
 
 </div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-tab="home">
+    <span class="nav-icon">🏠</span>首页
+  </button>
+  <button class="nav-item" data-tab="weather">
+    <span class="nav-icon">🌤</span>天气
+  </button>
+  <button class="nav-item" data-tab="weight">
+    <span class="nav-icon">⚖️</span>体重
+  </button>
+  <button class="nav-item" data-tab="todo">
+    <span class="nav-icon">📋</span>待办
+  </button>
+  <button class="nav-item" data-tab="messages">
+    <span class="nav-icon">💬</span>留言
+  </button>
+  <button class="nav-item" data-tab="period">
+    <span class="nav-icon">📅</span>经期
+  </button>
+</nav>
 
 <!-- ===== SETTINGS MODAL ===== -->
 <div class="modal-overlay" id="settingsModal">
@@ -474,34 +388,13 @@ body {
     <button class="close-btn" onclick="closeSettings()">✕</button>
     <h2>⚙ 设置</h2>
     <form onsubmit="saveSettings(event)">
-      <div class="form-group">
-        <label>我的名字</label>
-        <input type="text" id="setName0" required>
-      </div>
-      <div class="form-group">
-        <label>女友的名字</label>
-        <input type="text" id="setName1" required>
-      </div>
-      <div class="form-group">
-        <label>我的身高 (cm)</label>
-        <input type="number" id="setHeight0" min="100" max="250" required>
-      </div>
-      <div class="form-group">
-        <label>女友的身高 (cm)</label>
-        <input type="number" id="setHeight1" min="100" max="250" required>
-      </div>
-      <div class="form-group">
-        <label>在一起的日子</label>
-        <input type="date" id="setAnniversary" required>
-      </div>
-      <div class="form-group">
-        <label>例假周期 (天)</label>
-        <input type="number" id="setCycleDays" min="20" max="45" value="28">
-      </div>
-      <div class="form-group">
-        <label>默认城市</label>
-        <input type="text" id="setCity" placeholder="如：北京">
-      </div>
+      <div class="form-group"><label>张众的名字</label><input type="text" id="setName0" required></div>
+      <div class="form-group"><label>刘笑的名字</label><input type="text" id="setName1" required></div>
+      <div class="form-group"><label>张众的身高 (cm)</label><input type="number" id="setHeight0" min="100" max="250" required></div>
+      <div class="form-group"><label>刘笑的身高 (cm)</label><input type="number" id="setHeight1" min="100" max="250" required></div>
+      <div class="form-group"><label>在一起的日子</label><input type="date" id="setAnniversary" required></div>
+      <div class="form-group"><label>例假周期 (天)</label><input type="number" id="setCycleDays" min="20" max="45" value="28"></div>
+      <div class="form-group"><label>默认城市</label><input type="text" id="setCity" placeholder="如：北京"></div>
       <button type="submit">保存设置</button>
     </form>
   </div>
@@ -510,7 +403,6 @@ body {
 <script>
 // ============ DATA ============
 const STORAGE_KEY = 'love-dashboard-data';
-
 function loadData() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) return JSON.parse(raw);
@@ -527,216 +419,134 @@ function loadData() {
     todoIdCounter: 0
   };
 }
-
 let D = loadData();
-// Migrate old data
-if (D.names[0] === '我' && D.names[1] === '女友') {
-  D.names = ['张众', '刘笑'];
-  saveData(D);
-}
+if (D.names[0] === '我' && D.names[1] === '女友') { D.names = ['张众', '刘笑']; saveData(D); }
 function persist() { saveData(D); }
 function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
 
 function updateSelects() {
-  const selects = ['todoPerson', 'msgAuthor', 'weightPerson'];
-  selects.forEach(id => {
+  ['todoPerson', 'msgAuthor', 'weightPerson'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = `
-      <option value="0">👦 ${D.names[0]}</option>
-      <option value="1">👧 ${D.names[1]}</option>`;
+    if (el) el.innerHTML = `<option value="0">👦 ${D.names[0]}</option><option value="1">👧 ${D.names[1]}</option>`;
   });
 }
 
 // ============ HELPERS ============
-function fmtDate(d) {
-  const dd = new Date(d);
-  return `${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`;
-}
+function fmtDate(d) { const dd = new Date(d); return `${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`; }
 function todayStr() { return fmtDate(new Date()); }
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 // ============ STARS ============
 function initStars() {
-  const container = document.getElementById('stars');
   let html = '';
   for (let i = 0; i < 60; i++) {
-    const x = Math.random()*100; const y = Math.random()*100;
-    const size = Math.random()*2+1;
-    const delay = Math.random()*2;
-    html += `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-delay:${delay}s;"></div>`;
+    const x = Math.random()*100, y = Math.random()*100, s = Math.random()*2+1, delay = Math.random()*2;
+    html += `<div class="star" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;animation-delay:${delay}s;"></div>`;
   }
-  container.innerHTML = html;
+  document.getElementById('stars').innerHTML = html;
 }
 
-// ============ TIME COUNTER ============
+// ============ TAB NAVIGATION ============
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ============ TIMER ============
 function updateTimer() {
   const start = new Date(D.anniversary + 'T00:00:00');
   const now = new Date();
-  if (isNaN(start.getTime())) {
-    document.getElementById('loveTimer').innerHTML = '<span style="font-size:.5em">请设置纪念日</span>';
-    return;
-  }
+  if (isNaN(start.getTime())) { document.getElementById('loveTimer').textContent = '请设置纪念日'; return; }
   let diff = Math.floor((now - start) / 1000);
   if (diff < 0) { document.getElementById('loveTimer').textContent = '即将开始 💕'; return; }
   const sec = diff % 60; diff = Math.floor(diff / 60);
   const min = diff % 60; diff = Math.floor(diff / 60);
   const hr = diff % 24; diff = Math.floor(diff / 24);
   const day = diff;
-
-  document.getElementById('loveTimer').innerHTML =
-    `${day}<span class="unit">天</span> ${String(hr).padStart(2,'0')}<span class="unit">时</span> ${String(min).padStart(2,'0')}<span class="unit">分</span> ${String(sec).padStart(2,'0')}<span class="unit">秒</span>`;
-
-  // Progress toward next 100-day milestone
+  document.getElementById('loveTimer').innerHTML = `${day}<span class="unit">天</span> ${String(hr).padStart(2,'0')}<span class="unit">时</span> ${String(min).padStart(2,'0')}<span class="unit">分</span> ${String(sec).padStart(2,'0')}<span class="unit">秒</span>`;
   const milestone = Math.ceil(day / 100) * 100;
   const prevMilestone = Math.floor(day / 100) * 100;
   const progress = prevMilestone === milestone ? 100 : Math.round((day - prevMilestone) / (milestone - prevMilestone) * 100);
   document.getElementById('loveProgressFill').style.width = progress + '%';
   document.getElementById('loveProgressLabel').textContent = `距${milestone}天还有${milestone - day}天 · 恋爱ing`;
-
-  // Anniversary section
   document.getElementById('anniDays').textContent = day;
   document.getElementById('anniDate').textContent = `在一起 · ${D.anniversary}`;
-  document.getElementById('heroDate').textContent = `📅 ${D.anniversary}`;
 }
 
 // ============ WEATHER ============
 async function fetchWeatherByCity(cityName) {
-  const input = document.getElementById('cityInput');
-  const city = (cityName || input?.value || '').trim();
+  const city = (cityName || document.getElementById('cityInput')?.value || '').trim();
   if (!city) return;
   D.city = city; persist();
   document.querySelectorAll('.weather-city-row input').forEach(el => { el.value = city; });
   try {
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`;
-    const geoResp = await fetch(geoUrl);
+    const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`);
     const geoData = await geoResp.json();
-    if (geoData.results && geoData.results.length > 0) {
-      const r = geoData.results[0];
-      fetchWeather(r.latitude, r.longitude);
-    } else {
-      renderWeatherError('未找到城市');
-    }
-  } catch(e) {
-    renderWeatherError('查询失败，请检查网络');
-  }
+    if (geoData.results?.length) { fetchWeather(geoData.results[0].latitude, geoData.results[0].longitude); }
+    else { renderWeatherError('未找到城市'); }
+  } catch(e) { renderWeatherError('查询失败'); }
 }
 
 async function fetchWeather(lat, lon) {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=1`;
-    const resp = await fetch(url);
+    const resp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=1`);
     const data = await resp.json();
-    renderWeather(data);
-  } catch(e) {
-    renderWeatherError('获取天气失败');
-  }
-}
-
-function getWeatherInfo(code) {
-  const map = {0:['☀️','晴天'],1:['🌤','大部晴'],2:['⛅','多云'],3:['☁️','阴天'],45:['🌫','雾'],48:['🌫','雾凇'],51:['🌦','小雨'],53:['🌦','小雨'],55:['🌦','小雨'],61:['🌧','小雨'],63:['🌧','中雨'],65:['🌧','大雨'],71:['❄️','小雪'],73:['❄️','中雪'],75:['❄️','大雪'],77:['❄️','雪粒'],80:['🌦','阵雨'],81:['🌧','阵雨'],82:['🌧','大阵雨'],85:['❄️','小雪'],86:['❄️','大雪'],95:['⛈','雷暴'],96:['⛈','雷暴冰雹'],99:['⛈','雷暴冰雹']};
-  return map[code] || ['🌡','--'];
-}
-
-function getClothing(temp, code) {
-  let s = '';
-  if (temp < 0) s = '厚羽绒服 + 围巾 + 手套';
-  else if (temp < 5) s = '羽绒服 + 厚毛衣 + 围巾';
-  else if (temp < 10) s = '厚外套 + 毛衣';
-  else if (temp < 15) s = '薄外套 + 长袖';
-  else if (temp < 20) s = '薄长袖 / 短袖+薄外套';
-  else if (temp < 25) s = '短袖 + 薄长裤 / 连衣裙';
-  else if (temp < 30) s = '短袖短裤 / 裙子 + 防晒';
-  else s = '轻薄透气 + 防晒霜 + 遮阳伞';
-  if ([51,53,55,61,63,65,80,81,82,95,96,99].includes(code)) s += ' · 🌂 带伞';
-  return s;
-}
-
-function renderWeather(data) {
-  const cw = data.current_weather;
-  const daily = data.daily;
-  const temp = Math.round(cw.temperature);
-  const code = cw.weathercode;
-  const [icon, desc] = getWeatherInfo(code);
-  const cloth = getClothing(temp, code);
-
-  document.getElementById('weatherContent').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <span style="font-weight:600;">📍 ${escHtml(D.city)}</span>
-      <span style="font-size:.75em;color:var(--text-lighter);">${todayStr()}</span>
-    </div>
-    <div class="weather-top">
-      <div class="weather-icon">${icon}</div>
-      <div class="weather-main-info">
-        <div class="weather-temp">${temp}°C</div>
-        <div class="weather-desc">${desc}</div>
+    const cw = data.current_weather, daily = data.daily;
+    const temp = Math.round(cw.temperature), code = cw.weathercode;
+    const map = {0:['☀️','晴天'],1:['🌤','大部晴'],2:['⛅','多云'],3:['☁️','阴天'],45:['🌫','雾'],48:['🌫','雾凇'],51:['🌦','小雨'],53:['🌦','小雨'],55:['🌦','小雨'],61:['🌧','小雨'],63:['🌧','中雨'],65:['🌧','大雨'],71:['❄️','小雪'],73:['❄️','中雪'],75:['❄️','大雪'],80:['🌦','阵雨'],81:['🌧','阵雨'],82:['🌧','大阵雨'],85:['❄️','小雪'],86:['❄️','大雪'],95:['⛈','雷暴'],96:['⛈','雷暴冰雹'],99:['⛈','雷暴冰雹']};
+    const [icon, desc] = map[code] || ['🌡','--'];
+    let cloth = '';
+    if (temp < 0) cloth = '厚羽绒服 + 围巾 + 手套';
+    else if (temp < 5) cloth = '羽绒服 + 厚毛衣 + 围巾';
+    else if (temp < 10) cloth = '厚外套 + 毛衣';
+    else if (temp < 15) cloth = '薄外套 + 长袖';
+    else if (temp < 20) cloth = '薄长袖 / 短袖+薄外套';
+    else if (temp < 25) cloth = '短袖 + 薄长裤 / 连衣裙';
+    else if (temp < 30) cloth = '短袖短裤 / 裙子 + 防晒';
+    else cloth = '轻薄透气 + 防晒霜 + 遮阳伞';
+    if ([51,53,55,61,63,65,80,81,82,95,96,99].includes(code)) cloth += ' · 🌂 带伞';
+    document.getElementById('weatherContent').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-weight:600;">📍 ${escHtml(D.city)}</span>
+        <span style="font-size:.72em;color:var(--text-lighter);">${todayStr()}</span>
       </div>
-    </div>
-    <div class="weather-detail">
-      <span>💨 风速 ${cw.windspeed} km/h</span>
-      <span>🌡 ${Math.round(daily.temperature_2m_max[0])}° / ${Math.round(daily.temperature_2m_min[0])}°</span>
-    </div>
-    <div class="clothing-tip">👗 穿搭建议：${cloth}</div>
-    <div class="weather-city-row" style="margin-top:10px;">
-      <input type="text" id="cityInput2" placeholder="更换城市...">
-      <button onclick="fetchWeatherByCity()">查询</button>
-    </div>
-  `;
+      <div class="weather-top">
+        <div class="weather-icon">${icon}</div>
+        <div class="weather-main-info"><div class="weather-temp">${temp}°C</div><div class="weather-desc">${desc}</div></div>
+      </div>
+      <div class="weather-detail"><span>💨 ${cw.windspeed} km/h</span><span>🌡 ${Math.round(daily.temperature_2m_max[0])}° / ${Math.round(daily.temperature_2m_min[0])}°</span></div>
+      <div class="clothing-tip">👗 穿搭建议：${cloth}</div>
+      <div class="weather-city-row" style="margin-top:10px;"><input type="text" id="cityInput2" placeholder="更换城市..."><button onclick="fetchWeatherByCity()">查询</button></div>`;
+  } catch(e) { renderWeatherError('获取天气失败'); }
 }
 
 function renderWeatherError(msg) {
-  document.getElementById('weatherContent').innerHTML = `
-    <div style="color:var(--text-lighter);margin-bottom:8px;">${msg}</div>
-    <div class="weather-city-row">
-      <input type="text" id="cityInput" placeholder="输入城市名...">
-      <button onclick="fetchWeatherByCity()">查询</button>
-    </div>
-  `;
+  document.getElementById('weatherContent').innerHTML = `<div style="color:var(--text-lighter);margin-bottom:8px;">${msg}</div><div class="weather-city-row"><input type="text" id="cityInput" placeholder="输入城市名..."><button onclick="fetchWeatherByCity()">查询</button></div>`;
 }
 
 function initWeather() {
   if (D.city) { fetchWeatherByCity(D.city); }
   else if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-      () => {}
-    );
+    navigator.geolocation.getCurrentPosition(pos => fetchWeather(pos.coords.latitude, pos.coords.longitude), () => {});
   }
 }
 
 // ============ WEIGHT ============
-function calcBMI(weight, heightCm) {
-  const h = heightCm / 100;
-  return (weight / (h * h)).toFixed(1);
-}
-
-function bmiCategory(bmi) {
-  const v = parseFloat(bmi);
-  if (v < 18.5) return '偏瘦';
-  if (v < 24) return '正常';
-  if (v < 28) return '偏胖';
-  return '肥胖';
-}
+function calcBMI(weight, heightCm) { const h = heightCm/100; return (weight/(h*h)).toFixed(1); }
+function bmiCategory(bmi) { const v = parseFloat(bmi); if (v < 18.5) return '偏瘦'; if (v < 24) return '正常'; if (v < 28) return '偏胖'; return '肥胖'; }
 
 function renderWeights() {
   const latest = [null, null];
-  for (let i = D.weights.length - 1; i >= 0; i--) {
-    const w = D.weights[i];
-    if (latest[w.person] === null) latest[w.person] = w;
-  }
-  const cls = ['male','female'];
-  document.getElementById('weightDual').innerHTML = [0,1].map(p => {
-    const w = latest[p];
-    const name = D.names[p];
-    const h = D.heights[p];
-    if (!w) {
-      return `<div class="weight-person-card ${cls[p]}"><div class="w-name">${name}</div><div class="w-val">--<span class="w-unit">kg</span></div><div class="w-bmi">暂无记录</div></div>`;
-    }
+  for (let i = D.weights.length-1; i >=0; i--) { const w = D.weights[i]; if (latest[w.person]===null) latest[w.person] = w; }
+  document.getElementById('weightDual').innerHTML = ['male','female'].map((cls, p) => {
+    const w = latest[p], name = D.names[p], h = D.heights[p];
+    if (!w) return `<div class="weight-person-card ${cls}"><div class="w-name">${name}</div><div class="w-val">--<span class="w-unit">kg</span></div><div class="w-bmi">暂无记录</div></div>`;
     const bmi = calcBMI(w.weight, h);
-    return `<div class="weight-person-card ${cls[p]}">
-      <div class="w-name">${name}</div>
-      <div class="w-val">${w.weight}<span class="w-unit">kg</span></div>
-      <div class="w-bmi">BMI ${bmi} · ${bmiCategory(bmi)}</div>
-    </div>`;
+    return `<div class="weight-person-card ${cls}"><div class="w-name">${name}</div><div class="w-val">${w.weight}<span class="w-unit">kg</span></div><div class="w-bmi">BMI ${bmi} · ${bmiCategory(bmi)}</div></div>`;
   }).join('');
 }
 
@@ -745,8 +555,7 @@ function addWeight() {
   const person = parseInt(document.getElementById('weightPerson').value);
   if (!weight || weight < 20 || weight > 300) { alert('请输入有效体重（20-300kg）'); return; }
   D.weights.push({ person, weight, date: todayStr() });
-  persist();
-  renderWeights();
+  persist(); renderWeights();
   document.getElementById('weightInput').value = '';
 }
 
@@ -762,8 +571,7 @@ function predictNext(periods, cycleDays) {
     }
     if (count > 0) avgCycle = Math.round(sum / count);
   }
-  const last = new Date(periods[0].date);
-  const next = new Date(last);
+  const next = new Date(periods[0].date);
   next.setDate(next.getDate() + avgCycle);
   return { date: next, cycleDays: avgCycle };
 }
@@ -772,50 +580,30 @@ function renderPeriod() {
   D.periods.sort((a,b) => new Date(b.date) - new Date(a.date));
   const prediction = predictNext(D.periods, D.cycleDays);
   const today = new Date(); today.setHours(0,0,0,0);
-
   let topHtml = '';
   let onPeriod = false, daysUntil = 0;
 
   if (D.periods.length > 0) {
-    const lastStart = new Date(D.periods[0].date);
-    const daysSince = Math.floor((today - lastStart) / 86400000);
+    const daysSince = Math.floor((today - new Date(D.periods[0].date)) / 86400000);
     if (daysSince >= 0 && daysSince < 5) onPeriod = true;
   }
 
   if (onPeriod) {
-    topHtml = `
-      <div class="period-ring" style="background: conic-gradient(#ef5350 ${Math.round((5-(new Date()-new Date(D.periods[0].date))/86400000)/5*100)}%, transparent 0);">
-        <div class="period-ring-inner"><div class="days" style="color:#ef5350;">经期</div><div class="sub">中</div></div>
-      </div>
-      <div class="period-info"><div class="status active">🔴 经期中</div><div class="dates">注意保暖，多喝热水</div></div>`;
+    const dayOf = Math.floor((today - new Date(D.periods[0].date)) / 86400000) + 1;
+    topHtml = `<div class="period-ring" style="background:conic-gradient(#ef5350 ${dayOf/5*100}%, transparent 0);"><div class="period-ring-inner"><div class="days" style="color:#ef5350;">D${dayOf}</div><div class="sub">经期中</div></div></div><div class="period-info"><div class="status" style="color:#ef5350;">🔴 经期中</div><div style="font-size:.78em;color:var(--text-lighter);">注意保暖，多喝热水</div></div>`;
   } else if (prediction) {
     daysUntil = Math.floor((prediction.date - today) / 86400000);
     const nextDate = fmtDate(prediction.date);
     if (daysUntil <= 3) {
-      const pct = Math.round((D.cycleDays - daysUntil) / D.cycleDays * 100);
-      topHtml = `
-        <div class="period-ring" style="background: conic-gradient(#ffa726 ${pct}%, transparent 0);">
-          <div class="period-ring-inner"><div class="days" style="color:#ffa726;">${daysUntil}</div><div class="sub">天后</div></div>
-        </div>
-        <div class="period-info"><div class="status warning">🟡 即将到来</div><div class="dates">预计 ${nextDate} · 提前准备</div></div>`;
+      topHtml = `<div class="period-ring" style="background:conic-gradient(#ffa726 ${(D.cycleDays-daysUntil)/D.cycleDays*100}%, transparent 0);"><div class="period-ring-inner"><div class="days" style="color:#ffa726;">${daysUntil}</div><div class="sub">天后</div></div></div><div class="period-info"><div class="status" style="color:#ffa726;">🟡 即将到来</div><div style="font-size:.78em;color:var(--text-lighter);">预计 ${nextDate} · 提前准备</div></div>`;
     } else {
-      topHtml = `
-        <div class="period-ring" style="background: conic-gradient(#66bb6a ${Math.round((D.cycleDays-daysUntil)/D.cycleDays*100)}%, transparent 0);">
-          <div class="period-ring-inner"><div class="days" style="color:#66bb6a;">${daysUntil}</div><div class="sub">天后</div></div>
-        </div>
-        <div class="period-info"><div class="status normal">🟢 安全期</div><div class="dates">下次 ${nextDate} · 周期${prediction.cycleDays}天</div></div>`;
+      topHtml = `<div class="period-ring" style="background:conic-gradient(#66bb6a ${(D.cycleDays-daysUntil)/D.cycleDays*100}%, transparent 0);"><div class="period-ring-inner"><div class="days" style="color:#66bb6a;">${daysUntil}</div><div class="sub">天后</div></div></div><div class="period-info"><div class="status" style="color:#66bb6a;">🟢 安全期</div><div style="font-size:.78em;color:var(--text-lighter);">下次 ${nextDate} · 周期${prediction.cycleDays}天</div></div>`;
     }
   } else {
-    topHtml = `<div class="period-info" style="color:var(--text-lighter);">暂无记录，请添加例假日期</div>`;
+    topHtml = `<div style="color:var(--text-lighter);">暂无记录，请添加例假日期</div>`;
   }
-
   document.getElementById('periodTop').innerHTML = topHtml;
-
-  let histHtml = '';
-  D.periods.slice(0, 4).forEach(p => {
-    histHtml += `<div class="ph-item"><span>${p.date}</span><span>开始</span></div>`;
-  });
-  document.getElementById('periodHistory').innerHTML = histHtml;
+  document.getElementById('periodHistory').innerHTML = D.periods.slice(0, 4).map(p => `<div class="ph-item"><span>${p.date}</span><span>开始</span></div>`).join('');
 }
 
 function addPeriod() {
@@ -823,28 +611,19 @@ function addPeriod() {
   if (!date) { alert('请选择日期'); return; }
   if (D.periods.some(p => p.date === date)) { alert('该日期已记录'); return; }
   D.periods.push({ date });
-  persist();
-  renderPeriod();
+  persist(); renderPeriod();
   document.getElementById('periodDate').value = '';
 }
 
 // ============ MESSAGES ============
 function renderMessages() {
   const list = document.getElementById('messagesList');
-  if (D.messages.length === 0) {
-    list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">💌 还没有留言，快来写一句吧</div>';
-    return;
-  }
+  if (D.messages.length === 0) { list.innerHTML = '<div style="color:#555;text-align:center;padding:30px;">💌 还没有留言</div>'; return; }
   const msgs = D.messages.slice(-30).reverse();
-  let html = '';
-  let lastDate = '';
+  let html = '', lastDate = '';
   msgs.forEach(m => {
-    if (m.date !== lastDate) {
-      html += `<div class="msg-date-sep">${m.date}</div>`;
-      lastDate = m.date;
-    }
-    const cls = m.person === 0 ? 'male' : 'female';
-    html += `<div class="msg-bubble ${cls}"><div class="author">${D.names[m.person]}</div>${escHtml(m.text)}</div>`;
+    if (m.date !== lastDate) { html += `<div class="msg-date-sep">${m.date}</div>`; lastDate = m.date; }
+    html += `<div class="msg-bubble ${m.person===0?'male':'female'}"><div class="author">${D.names[m.person]}</div>${escHtml(m.text)}</div>`;
   });
   list.innerHTML = html;
 }
@@ -854,32 +633,22 @@ function addMessage() {
   const person = parseInt(document.getElementById('msgAuthor').value);
   if (!text) return;
   D.messages.push({ person, text, date: todayStr() });
-  persist();
-  renderMessages();
+  persist(); renderMessages();
   document.getElementById('msgInput').value = '';
 }
 
 // ============ TODOS ============
 function renderTodos() {
-  const list = document.getElementById('todoList');
   const active = D.todos.filter(t => !t.done).length;
   document.getElementById('todoCount').textContent = active + '项';
-
-  if (D.todos.length === 0) {
-    list.innerHTML = '<div style="color:#555;text-align:center;padding:16px;">📝 暂无待办</div>';
-    return;
-  }
-  // Not done first, then done
-  const sorted = [...D.todos].sort((a,b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
-  list.innerHTML = sorted.map(t => {
+  if (D.todos.length === 0) { document.getElementById('todoList').innerHTML = '<div style="color:#555;text-align:center;padding:20px;">📝 暂无待办</div>'; return; }
+  const sorted = [...D.todos].sort((a,b) => (a.done?1:0) - (b.done?1:0));
+  document.getElementById('todoList').innerHTML = sorted.map(t => {
     const cls = t.person === 0 ? 'male' : 'female';
-    const doneCls = t.done ? ' done' : '';
-    return `<div class="todo-item${doneCls}">
+    return `<div class="todo-item${t.done?' done':''}">
       <input type="checkbox" class="todo-cb" ${t.done?'checked':''} onchange="toggleTodo(${t.id})">
-      <span class="todo-dot ${cls}"></span>
-      <span class="todo-text">${escHtml(t.text)}</span>
-      <button class="todo-del" onclick="deleteTodo(${t.id})">✕</button>
-    </div>`;
+      <span class="todo-dot ${cls}"></span><span class="todo-text">${escHtml(t.text)}</span>
+      <button class="todo-del" onclick="deleteTodo(${t.id})">✕</button></div>`;
   }).join('');
 }
 
@@ -887,22 +656,12 @@ function addTodo() {
   const text = document.getElementById('todoInput').value.trim();
   const person = parseInt(document.getElementById('todoPerson').value);
   if (!text) return;
-  D.todos.push({ person, text, done: false, id: ++D.todoIdCounter });
-  persist();
-  renderTodos();
+  D.todos.push({ person, text, done:false, id: ++D.todoIdCounter });
+  persist(); renderTodos();
   document.getElementById('todoInput').value = '';
 }
-
-function toggleTodo(id) {
-  const t = D.todos.find(x => x.id === id);
-  if (t) { t.done = !t.done; persist(); renderTodos(); }
-}
-
-function deleteTodo(id) {
-  D.todos = D.todos.filter(x => x.id !== id);
-  persist();
-  renderTodos();
-}
+function toggleTodo(id) { const t = D.todos.find(x => x.id===id); if (t) { t.done = !t.done; persist(); renderTodos(); } }
+function deleteTodo(id) { D.todos = D.todos.filter(x => x.id!==id); persist(); renderTodos(); }
 
 // ============ SETTINGS ============
 function openSettings() {
@@ -915,29 +674,19 @@ function openSettings() {
   document.getElementById('setCity').value = D.city;
   document.getElementById('settingsModal').classList.add('show');
 }
-
-function closeSettings() {
-  document.getElementById('settingsModal').classList.remove('show');
-}
-
+function closeSettings() { document.getElementById('settingsModal').classList.remove('show'); }
 function saveSettings(e) {
   e.preventDefault();
-  D.names[0] = document.getElementById('setName0').value.trim() || '我';
-  D.names[1] = document.getElementById('setName1').value.trim() || '女友';
+  D.names[0] = document.getElementById('setName0').value.trim() || '张众';
+  D.names[1] = document.getElementById('setName1').value.trim() || '刘笑';
   D.heights[0] = parseInt(document.getElementById('setHeight0').value) || 175;
   D.heights[1] = parseInt(document.getElementById('setHeight1').value) || 165;
   D.anniversary = document.getElementById('setAnniversary').value;
   D.cycleDays = parseInt(document.getElementById('setCycleDays').value) || 28;
   const newCity = document.getElementById('setCity').value.trim();
   if (newCity !== D.city) { D.city = newCity; }
-  persist();
-  closeSettings();
-  updateSelects();
-  updateTimer();
-  renderWeights();
-  renderMessages();
-  renderTodos();
-  renderPeriod();
+  persist(); closeSettings();
+  updateSelects(); updateTimer(); renderWeights(); renderMessages(); renderTodos(); renderPeriod();
   if (D.city) fetchWeatherByCity(D.city);
 }
 
@@ -948,10 +697,7 @@ document.addEventListener('keydown', e => {
     else if (document.activeElement === document.getElementById('todoInput')) addTodo();
   }
 });
-
-document.getElementById('settingsModal').addEventListener('click', function(e) {
-  if (e.target === this) closeSettings();
-});
+document.getElementById('settingsModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSettings(); });
 
 // ============ INIT ============
 function init() {
@@ -966,7 +712,6 @@ function init() {
   renderTodos();
   document.getElementById('periodDate').value = todayStr();
 }
-
 init();
 </script>
 </body>
