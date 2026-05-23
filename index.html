@@ -798,7 +798,7 @@ function renderPeriod() {
     topHtml = `<div style="color:var(--text-lighter);">暂无记录，请添加例假日期</div>`;
   }
   document.getElementById('periodTop').innerHTML = topHtml;
-  document.getElementById('periodHistory').innerHTML = D.periods.slice(0, 4).map(p => `<div class="ph-item"><span>${p.date}</span><span>开始</span></div>`).join('');
+  document.getElementById('periodHistory').innerHTML = D.periods.slice(0, 6).map(p => `<div class="ph-item"><span>${p.date}</span><span style="display:flex;align-items:center;gap:8px;">开始 <button onclick="deletePeriod('${p.date}')" style="background:none;border:none;color:#e53935;cursor:pointer;font-size:.85em;">撤回</button></span></div>`).join('');
 }
 
 function addPeriod() {
@@ -808,6 +808,11 @@ function addPeriod() {
   D.periods.push({ date });
   persist(); renderPeriod();
   document.getElementById('periodDate').value = '';
+}
+
+function deletePeriod(date) {
+  D.periods = D.periods.filter(p => p.date !== date);
+  persist(); renderPeriod();
 }
 
 // ============ MESSAGES ============
