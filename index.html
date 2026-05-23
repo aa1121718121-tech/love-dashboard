@@ -13,6 +13,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root {
   --bg: #1a1a2e;
@@ -235,12 +237,12 @@ body::before {
   z-index:100; padding:0 4px;
 }
 .nav-item {
-  display:flex; flex-direction:column; align-items:center; gap:3px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
   background:none; border:none; color:var(--text-lighter);
-  font-size:.65em; cursor:pointer; padding:8px 6px;
-  transition:color .2s; min-width:52px;
+  font-size:.6em; cursor:pointer; padding:8px 3px;
+  transition:color .2s; flex:1; min-width:0;
 }
-.nav-item .nav-icon { font-size:1.5em; transition:transform .2s; }
+.nav-item .nav-icon { font-size:1.35em; transition:transform .2s; }
 .nav-item.active { color:var(--pink); }
 .nav-item.active .nav-icon { transform:scale(1.15); }
 .nav-item:active .nav-icon { transform:scale(.9); }
@@ -389,6 +391,19 @@ body::before {
     </div>
   </div>
 
+  <!-- ===== TAB: 位置 ===== -->
+  <div class="tab-panel" id="tab-location">
+    <div class="card" style="padding:12px;">
+      <div class="card-header" style="margin-bottom:10px;"><h2>📍 位置共享</h2></div>
+      <div id="locationMap" style="width:100%;height:320px;border-radius:12px;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;color:var(--text-lighter);font-size:.85em;">点击下方按钮获取位置</div>
+      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:.82em;color:var(--text-lighter);" id="locationInfo">--</div>
+        <button onclick="shareMyLocation()" id="locBtn" style="padding:8px 16px;border-radius:8px;border:none;background:var(--pink);color:#fff;font-size:.85em;cursor:pointer;">📍 共享我的位置</button>
+      </div>
+      <div style="margin-top:6px;font-size:.72em;color:var(--text-lighter);" id="locationUpdated"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ===== BOTTOM NAV ===== -->
@@ -410,6 +425,9 @@ body::before {
   </button>
   <button class="nav-item" data-tab="period">
     <span class="nav-icon">📅</span>经期
+  </button>
+  <button class="nav-item" data-tab="location">
+    <span class="nav-icon">📍</span>位置
   </button>
 </nav>
 
@@ -503,6 +521,9 @@ function refreshAll() {
   renderPeriod();
   renderMessages();
   renderTodos();
+  if (document.getElementById('tab-location').classList.contains('active')) {
+    renderLocationMap();
+  }
 }
 
 function markOnline() {
@@ -541,6 +562,7 @@ function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   // redraw chart when switching to weight tab
   if (name === 'weight') setTimeout(drawWeightChart, 50);
+  if (name === 'location') setTimeout(initLocationMap, 100);
 }
 
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -968,6 +990,115 @@ document.addEventListener('keydown', e => {
   }
 });
 document.getElementById('settingsModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSettings(); });
+
+// ============ LOCATION ============
+if (D.myRole === undefined) D.myRole = null;
+if (!D.locations) D.locations = {};
+
+function getMyRole() {
+  if (D.myRole !== null && D.myRole !== undefined) return D.myRole;
+  const choice = prompt('请选择你的身份：\n输入 1 = ' + D.names[0] + '\n输入 2 = ' + D.names[1]);
+  const r = parseInt(choice);
+  if (r === 1 || r === 2) { D.myRole = r - 1; persist(); return D.myRole; }
+  D.myRole = 0; persist(); return 0;
+}
+
+function shareMyLocation() {
+  if (!navigator.geolocation) { alert('浏览器不支持定位'); return; }
+  const btn = document.getElementById('locBtn');
+  btn.textContent = '定位中...';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const role = getMyRole();
+      D.locations[role] = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: Math.round(pos.coords.accuracy),
+        updated: Date.now()
+      };
+      persist();
+      btn.textContent = '📍 更新位置';
+      btn.disabled = false;
+      document.getElementById('locationUpdated').textContent = '已更新 · ' + new Date().toLocaleTimeString();
+      renderLocationMap();
+    },
+    err => {
+      btn.textContent = '📍 共享我的位置';
+      btn.disabled = false;
+      alert('定位失败：' + err.message);
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+let locationMap = null;
+let locationMarkers = [];
+
+function initLocationMap() {
+  setTimeout(renderLocationMap, 200);
+}
+
+function renderLocationMap() {
+  const container = document.getElementById('locationMap');
+  if (!container) return;
+
+  const hasMe = D.locations[D.myRole] || D.locations[0] || D.locations[1];
+  if (!hasMe) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-lighter);">点击下方按钮共享位置</div>';
+    locationMap = null; locationMarkers = [];
+    return;
+  }
+
+  // init Leaflet map on first run
+  if (!locationMap) {
+    container.innerHTML = '';
+    locationMap = L.map(container, { attributionControl: false, zoomControl: false }).setView([39.9, 116.4], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19
+    }).addTo(locationMap);
+  }
+
+  // clear old markers
+  locationMarkers.forEach(m => locationMap.removeLayer(m));
+  locationMarkers = [];
+
+  const bounds = [];
+
+  [0, 1].forEach(p => {
+    const loc = D.locations[p];
+    if (!loc || !loc.lat) return;
+    bounds.push([loc.lat, loc.lng]);
+    const color = p === 0 ? '#4fc3f7' : '#e91e63';
+    const name = D.names[p];
+    const icon = L.divIcon({
+      html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px ${color};"></div>`,
+      className: '',
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+    const marker = L.marker([loc.lat, loc.lng], { icon }).addTo(locationMap);
+    const time = new Date(loc.updated).toLocaleTimeString();
+    marker.bindPopup(`<b>${name}</b><br>${time}更新<br>精度: ±${loc.accuracy || '?'}m`);
+    locationMarkers.push(marker);
+  });
+
+  if (bounds.length === 2) {
+    const group = L.featureGroup(locationMarkers);
+    locationMap.fitBounds(group.getBounds().pad(0.3));
+    // distance
+    const from = L.latLng(bounds[0]);
+    const to = L.latLng(bounds[1]);
+    const dist = Math.round(from.distanceTo(to));
+    const distStr = dist >= 1000 ? (dist / 1000).toFixed(1) + ' km' : dist + ' m';
+    document.getElementById('locationInfo').textContent = '📏 相距 ' + distStr;
+  } else if (bounds.length === 1) {
+    locationMap.setView(bounds[0], 14);
+    document.getElementById('locationInfo').textContent = '仅一人已共享位置';
+  } else {
+    document.getElementById('locationInfo').textContent = '--';
+  }
+}
 
 // ============ INIT ============
 function init() {
