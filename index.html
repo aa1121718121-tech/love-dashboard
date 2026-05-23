@@ -312,12 +312,21 @@ body::before {
 
   <!-- ===== TAB: 天气 ===== -->
   <div class="tab-panel" id="tab-weather">
-    <div class="card">
-      <div class="card-header"><h2>🌤 今日天气</h2></div>
-      <div id="weatherContent">
+    <div class="card" id="weatherCard0">
+      <div class="card-header"><h2>🌤 <span id="weatherCityLabel0">我的天气</span></h2></div>
+      <div id="weatherContent0">
         <div class="weather-city-row">
-          <input type="text" id="cityInput" placeholder="输入城市名...">
-          <button onclick="fetchWeatherByCity()">查询</button>
+          <input type="text" class="cityInput0" placeholder="输入城市名...">
+          <button onclick="fetchWeatherByCity(0)">查询</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="weatherCard1" style="margin-top:12px;">
+      <div class="card-header"><h2>🌤 <span id="weatherCityLabel1">她的天气</span></h2></div>
+      <div id="weatherContent1">
+        <div class="weather-city-row">
+          <input type="text" class="cityInput1" placeholder="输入城市名...">
+          <button onclick="fetchWeatherByCity(1)">查询</button>
         </div>
       </div>
     </div>
@@ -416,7 +425,8 @@ body::before {
       <div class="form-group"><label>刘笑的身高 (cm)</label><input type="number" id="setHeight1" min="100" max="250" required></div>
       <div class="form-group"><label>在一起的日子</label><input type="date" id="setAnniversary" required></div>
       <div class="form-group"><label>例假周期 (天)</label><input type="number" id="setCycleDays" min="20" max="45" value="28"></div>
-      <div class="form-group"><label>默认城市</label><input type="text" id="setCity" placeholder="如：北京"></div>
+      <div class="form-group"><label>张众的城市</label><input type="text" id="setCity0" placeholder="如：北京"></div>
+      <div class="form-group"><label>刘笑的城市</label><input type="text" id="setCity1" placeholder="如：上海"></div>
       <button type="submit">保存设置</button>
     </form>
   </div>
@@ -437,7 +447,7 @@ function loadData() {
     cycleDays: 28,
     messages: [],
     todos: [],
-    city: '',
+    cities: ['', ''],
     todoIdCounter: 0
   };
 }
@@ -559,69 +569,108 @@ function updateTimer() {
 }
 
 // ============ WEATHER ============
-async function fetchWeatherByCity(cityName) {
-  const city = (cityName || document.getElementById('cityInput')?.value || '').trim();
+function renderWeatherLabels() {
+  document.getElementById('weatherCityLabel0').textContent = '🌤 ' + (D.names[0] || '我') + '的天气';
+  document.getElementById('weatherCityLabel1').textContent = '🌤 ' + (D.names[1] || '她') + '的天气';
+}
+
+async function fetchWeatherByCity(p) {
+  const input = document.querySelector('.cityInput' + p);
+  const city = (input?.value || '').trim();
   if (!city) return;
-  D.city = city; persist();
-  document.querySelectorAll('.weather-city-row input').forEach(el => { el.value = city; });
+  D.cities[p] = city; persist();
+  document.querySelectorAll('.cityInput' + p).forEach(el => { el.value = city; });
   try {
     const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`);
     const geoData = await geoResp.json();
-    if (geoData.results?.length) { fetchWeather(geoData.results[0].latitude, geoData.results[0].longitude); }
-    else { renderWeatherError('未找到城市'); }
-  } catch(e) { renderWeatherError('查询失败'); }
+    if (geoData.results?.length) { fetchWeatherData(p, geoData.results[0].latitude, geoData.results[0].longitude); }
+    else { renderWeatherError(p, '未找到城市'); }
+  } catch(e) { renderWeatherError(p, '查询失败'); }
 }
 
-async function fetchWeather(lat, lon) {
+async function fetchWeatherData(p, lat, lon) {
   try {
     const resp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=1`);
     const data = await resp.json();
-    const cw = data.current_weather, daily = data.daily;
-    const temp = Math.round(cw.temperature), code = cw.weathercode;
-    const map = {0:['☀️','晴天'],1:['🌤','大部晴'],2:['⛅','多云'],3:['☁️','阴天'],45:['🌫','雾'],48:['🌫','雾凇'],51:['🌦','小雨'],53:['🌦','小雨'],55:['🌦','小雨'],61:['🌧','小雨'],63:['🌧','中雨'],65:['🌧','大雨'],71:['❄️','小雪'],73:['❄️','中雪'],75:['❄️','大雪'],80:['🌦','阵雨'],81:['🌧','阵雨'],82:['🌧','大阵雨'],85:['❄️','小雪'],86:['❄️','大雪'],95:['⛈','雷暴'],96:['⛈','雷暴冰雹'],99:['⛈','雷暴冰雹']};
-    const [icon, desc] = map[code] || ['🌡','--'];
-    function getClothingAdvice(temp, code) {
-      const rainy = [51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
-      if (temp < 0) return { top: '厚羽绒服 / 加厚棉衣', bottom: '加绒裤 / 棉裤', acc: '围巾🧣 + 手套🧤 + 帽子🎩', extra: rainy ? '🌂 带伞' : '' };
-      if (temp < 5) return { top: '羽绒服 / 棉服', bottom: '厚长裤 / 加绒裤', acc: '围巾🧣 + 手套🧤', extra: rainy ? '🌂 带伞' : '' };
-      if (temp < 10) return { top: '厚外套 / 呢大衣', bottom: '长裤 / 牛仔裤', acc: '围巾🧣', extra: rainy ? '🌂 带伞' : '' };
-      if (temp < 15) return { top: '薄外套 / 风衣 / 夹克', bottom: '长裤', acc: '可备薄围巾', extra: rainy ? '🌂 带伞' : '' };
-      if (temp < 20) return { top: '长袖T恤 / 薄卫衣', bottom: '长裤 / 长裙', acc: '随身带薄外套', extra: rainy ? '🌂 带伞' : '' };
-      if (temp < 25) return { top: '短袖 / 衬衫', bottom: '薄长裤 / 半身裙 / 连衣裙', acc: '', extra: rainy ? '🌂 带伞' : '' };
-      if (temp < 30) return { top: '短袖 / 吊带', bottom: '短裤 / 短裙', acc: '🧴 注意防晒', extra: rainy ? '🌂 带伞' : '' };
-      return { top: '轻薄短袖 / 背心', bottom: '短裤 / 薄裙', acc: '🧴 防晒霜 + 遮阳伞', extra: rainy ? '🌂 带伞' : '' };
-    }
-    const cloth = getClothingAdvice(temp, code);
-    document.getElementById('weatherContent').innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-weight:600;">📍 ${escHtml(D.city)}</span>
-        <span style="font-size:.72em;color:var(--text-lighter);">${todayStr()}</span>
-      </div>
-      <div class="weather-top">
-        <div class="weather-icon">${icon}</div>
-        <div class="weather-main-info"><div class="weather-temp">${temp}°C</div><div class="weather-desc">${desc}</div></div>
-      </div>
-      <div class="weather-detail"><span>💨 ${cw.windspeed} km/h</span><span>🌡 ${Math.round(daily.temperature_2m_max[0])}° / ${Math.round(daily.temperature_2m_min[0])}°</span></div>
-      <div class="clothing-tip">
-        <div style="font-weight:600;margin-bottom:6px;">👗 今日穿搭建议</div>
-        <div class="cloth-row">👕 上衣：${cloth.top}</div>
-        <div class="cloth-row">👖 下装：${cloth.bottom}</div>
-        ${cloth.acc ? `<div class="cloth-row">🎒 配饰：${cloth.acc}</div>` : ''}
-        ${cloth.extra ? `<div class="cloth-row">${cloth.extra}</div>` : ''}
-      </div>
-      <div class="weather-city-row" style="margin-top:10px;"><input type="text" id="cityInput2" placeholder="更换城市..."><button onclick="fetchWeatherByCity()">查询</button></div>`;
-  } catch(e) { renderWeatherError('获取天气失败'); }
+    renderWeather(p, data);
+  } catch(e) { renderWeatherError(p, '获取天气失败'); }
 }
 
-function renderWeatherError(msg) {
-  document.getElementById('weatherContent').innerHTML = `<div style="color:var(--text-lighter);margin-bottom:8px;">${msg}</div><div class="weather-city-row"><input type="text" id="cityInput" placeholder="输入城市名..."><button onclick="fetchWeatherByCity()">查询</button></div>`;
+function getClothingAdvice(temp, code) {
+  const rainy = [51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
+  if (temp < 0) return { top: '厚羽绒服 / 加厚棉衣', bottom: '加绒裤 / 棉裤', acc: '围巾🧣 + 手套🧤 + 帽子🎩', extra: rainy ? '🌂 带伞' : '' };
+  if (temp < 5) return { top: '羽绒服 / 棉服', bottom: '厚长裤 / 加绒裤', acc: '围巾🧣 + 手套🧤', extra: rainy ? '🌂 带伞' : '' };
+  if (temp < 10) return { top: '厚外套 / 呢大衣', bottom: '长裤 / 牛仔裤', acc: '围巾🧣', extra: rainy ? '🌂 带伞' : '' };
+  if (temp < 15) return { top: '薄外套 / 风衣 / 夹克', bottom: '长裤', acc: '可备薄围巾', extra: rainy ? '🌂 带伞' : '' };
+  if (temp < 20) return { top: '长袖T恤 / 薄卫衣', bottom: '长裤 / 长裙', acc: '随身带薄外套', extra: rainy ? '🌂 带伞' : '' };
+  if (temp < 25) return { top: '短袖 / 衬衫', bottom: '薄长裤 / 半身裙 / 连衣裙', acc: '', extra: rainy ? '🌂 带伞' : '' };
+  if (temp < 30) return { top: '短袖 / 吊带', bottom: '短裤 / 短裙', acc: '🧴 注意防晒', extra: rainy ? '🌂 带伞' : '' };
+  return { top: '轻薄短袖 / 背心', bottom: '短裤 / 薄裙', acc: '🧴 防晒霜 + 遮阳伞', extra: rainy ? '🌂 带伞' : '' };
+}
+
+function renderWeather(p, data) {
+  const cw = data.current_weather, daily = data.daily;
+  const temp = Math.round(cw.temperature), code = cw.weathercode;
+  const map = {0:['☀️','晴天'],1:['🌤','大部晴'],2:['⛅','多云'],3:['☁️','阴天'],45:['🌫','雾'],48:['🌫','雾凇'],51:['🌦','小雨'],53:['🌦','小雨'],55:['🌦','小雨'],61:['🌧','小雨'],63:['🌧','中雨'],65:['🌧','大雨'],71:['❄️','小雪'],73:['❄️','中雪'],75:['❄️','大雪'],80:['🌦','阵雨'],81:['🌧','阵雨'],82:['🌧','大阵雨'],85:['❄️','小雪'],86:['❄️','大雪'],95:['⛈','雷暴'],96:['⛈','雷暴冰雹'],99:['⛈','雷暴冰雹']};
+  const [icon, desc] = map[code] || ['🌡','--'];
+  const cloth = getClothingAdvice(temp, code);
+  document.getElementById('weatherContent'+p).innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <span style="font-weight:600;">📍 ${escHtml(D.cities[p])}</span>
+      <span style="font-size:.72em;color:var(--text-lighter);">${todayStr()}</span>
+    </div>
+    <div class="weather-top">
+      <div class="weather-icon">${icon}</div>
+      <div class="weather-main-info"><div class="weather-temp">${temp}°C</div><div class="weather-desc">${desc}</div></div>
+    </div>
+    <div class="weather-detail"><span>💨 ${cw.windspeed} km/h</span><span>🌡 ${Math.round(daily.temperature_2m_max[0])}° / ${Math.round(daily.temperature_2m_min[0])}°</span></div>
+    <div class="clothing-tip">
+      <div style="font-weight:600;margin-bottom:6px;">👗 今日穿搭</div>
+      <div class="cloth-row">👕 上衣：${cloth.top}</div>
+      <div class="cloth-row">👖 下装：${cloth.bottom}</div>
+      ${cloth.acc ? `<div class="cloth-row">🎒 配饰：${cloth.acc}</div>` : ''}
+      ${cloth.extra ? `<div class="cloth-row">${cloth.extra}</div>` : ''}
+    </div>
+    <div class="weather-city-row" style="margin-top:10px;">
+      <input type="text" class="cityInput${p}" placeholder="更换城市...">
+      <button onclick="fetchWeatherByCity(${p})">查询</button>
+    </div>`;
+}
+
+function renderWeatherError(p, msg) {
+  document.getElementById('weatherContent'+p).innerHTML = `
+    <div style="color:var(--text-lighter);margin-bottom:8px;">${msg}</div>
+    <div class="weather-city-row">
+      <input type="text" class="cityInput${p}" placeholder="输入城市名...">
+      <button onclick="fetchWeatherByCity(${p})">查询</button>
+    </div>`;
 }
 
 function initWeather() {
-  if (D.city) { fetchWeatherByCity(D.city); }
-  else if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => fetchWeather(pos.coords.latitude, pos.coords.longitude), () => {});
-  }
+  renderWeatherLabels();
+  [0,1].forEach(p => {
+    if (D.cities[p]) { fetchWeatherByCity2(p, D.cities[p]); }
+    else if (p === 0 && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => fetchWeatherData(p, pos.coords.latitude, pos.coords.longitude),
+        () => {}
+      );
+    }
+  });
+}
+
+// Helper: search city by name for a specific person
+async function fetchWeatherByCity2(p, cityName) {
+  const city = cityName.trim();
+  if (!city) return;
+  D.cities[p] = city; persist();
+  document.querySelectorAll('.cityInput' + p).forEach(el => { el.value = city; });
+  try {
+    const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`);
+    const geoData = await geoResp.json();
+    if (geoData.results?.length) { fetchWeatherData(p, geoData.results[0].latitude, geoData.results[0].longitude); }
+    else { renderWeatherError(p, '未找到城市'); }
+  } catch(e) { renderWeatherError(p, '查询失败'); }
 }
 
 // ============ WEIGHT ============
@@ -890,7 +939,8 @@ function openSettings() {
   document.getElementById('setHeight1').value = D.heights[1];
   document.getElementById('setAnniversary').value = D.anniversary;
   document.getElementById('setCycleDays').value = D.cycleDays;
-  document.getElementById('setCity').value = D.city;
+  document.getElementById('setCity0').value = D.cities[0];
+  document.getElementById('setCity1').value = D.cities[1];
   document.getElementById('settingsModal').classList.add('show');
 }
 function closeSettings() { document.getElementById('settingsModal').classList.remove('show'); }
@@ -902,11 +952,12 @@ function saveSettings(e) {
   D.heights[1] = parseInt(document.getElementById('setHeight1').value) || 165;
   D.anniversary = document.getElementById('setAnniversary').value;
   D.cycleDays = parseInt(document.getElementById('setCycleDays').value) || 28;
-  const newCity = document.getElementById('setCity').value.trim();
-  if (newCity !== D.city) { D.city = newCity; }
+  D.cities[0] = document.getElementById('setCity0').value.trim();
+  D.cities[1] = document.getElementById('setCity1').value.trim();
   persist(); closeSettings();
   updateSelects(); updateTimer(); renderWeights(); renderMessages(); renderTodos(); renderPeriod();
-  if (D.city) fetchWeatherByCity(D.city);
+  renderWeatherLabels();
+  [0,1].forEach(p => { if (D.cities[p]) fetchWeatherData(p); });
 }
 
 // ============ KEYBOARD ============
