@@ -199,7 +199,7 @@ body::before {
 .msg-date-sep::before, .msg-date-sep::after { content:''; position:absolute; top:50%; width:28%; height:1px; background:rgba(255,255,255,.08); }
 .msg-date-sep::before { left:0; }
 .msg-date-sep::after { right:0; }
-.msg-bubble { max-width:82%; padding:10px 14px; border-radius:16px; margin-bottom:8px; font-size:.85em; }
+.msg-bubble { max-width:82%; padding:10px 20px 10px 14px; border-radius:16px; margin-bottom:8px; font-size:.85em; position:relative; }
 .msg-bubble.male { background:rgba(79,195,247,.15); margin-right:auto; border-bottom-left-radius:4px; }
 .msg-bubble.female { background:rgba(233,30,99,.15); margin-left:auto; border-bottom-right-radius:4px; text-align:right; }
 .msg-bubble .author { font-size:.68em; opacity:.6; margin-bottom:2px; }
@@ -821,20 +821,30 @@ function renderMessages() {
   if (D.messages.length === 0) { list.innerHTML = '<div style="color:#555;text-align:center;padding:30px;">💌 还没有留言</div>'; return; }
   const msgs = D.messages.slice(-30).reverse();
   let html = '', lastDate = '';
-  msgs.forEach(m => {
+  msgs.forEach((m, idx) => {
+    const mid = m.id || idx;
     if (m.date !== lastDate) { html += `<div class="msg-date-sep">${m.date}</div>`; lastDate = m.date; }
-    html += `<div class="msg-bubble ${m.person===0?'male':'female'}"><div class="author">${D.names[m.person]}</div>${escHtml(m.text)}</div>`;
+    html += `<div class="msg-bubble ${m.person===0?'male':'female'}">
+      <div class="author">${D.names[m.person]}</div>${escHtml(m.text)}
+      <button onclick="deleteMessage(${mid})" style="position:absolute;top:2px;right:4px;background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:.7em;padding:1px 4px;">✕</button>
+    </div>`;
   });
   list.innerHTML = html;
 }
 
+let MSG_ID = Date.now();
 function addMessage() {
   const text = document.getElementById('msgInput').value.trim();
   const person = parseInt(document.getElementById('msgAuthor').value);
   if (!text) return;
-  D.messages.push({ person, text, date: todayStr() });
+  D.messages.push({ person, text, date: todayStr(), id: ++MSG_ID });
   persist(); renderMessages();
   document.getElementById('msgInput').value = '';
+}
+
+function deleteMessage(id) {
+  D.messages = D.messages.filter(m => m.id !== id);
+  persist(); renderMessages();
 }
 
 // ============ TODOS ============
