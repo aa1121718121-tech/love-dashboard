@@ -1,11 +1,11 @@
 const CACHE = 'love-story-v2';
 const ASSETS = [
-  '/love-dashboard/',
-  '/love-dashboard/index.html',
-  '/love-dashboard/manifest.json',
-  '/love-dashboard/bg.jpg',
-  '/love-dashboard/icon-192.png',
-  '/love-dashboard/icon-512.png'
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/bg.jpg',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
