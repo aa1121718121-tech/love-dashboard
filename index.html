@@ -416,10 +416,7 @@ body {
     </div>
     <div id="todoList"></div>
     <div class="todo-input-row">
-      <select id="todoPerson">
-        <option value="0">👦 我</option>
-        <option value="1">👧 女友</option>
-      </select>
+      <select id="todoPerson"></select>
       <input type="text" id="todoInput" placeholder="添加待办...">
       <button onclick="addTodo()">＋</button>
     </div>
@@ -430,10 +427,7 @@ body {
     <div class="card-header"><h2>💬 留言板</h2></div>
     <div class="messages-list" id="messagesList"></div>
     <div class="msg-input-row">
-      <select id="msgAuthor">
-        <option value="0">👦 我</option>
-        <option value="1">👧 女友</option>
-      </select>
+      <select id="msgAuthor"></select>
       <input type="text" id="msgInput" placeholder="说点什么...">
       <button onclick="addMessage()">发送</button>
     </div>
@@ -456,10 +450,7 @@ body {
     <div class="weight-dual" id="weightDual"></div>
     <div class="weight-input-row">
       <input type="number" id="weightInput" placeholder="体重(kg)" step="0.1">
-      <select id="weightPerson">
-        <option value="0">👦 我</option>
-        <option value="1">👧 女友</option>
-      </select>
+      <select id="weightPerson"></select>
       <button onclick="addWeight()">记录</button>
     </div>
   </div>
@@ -524,7 +515,7 @@ function loadData() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) return JSON.parse(raw);
   return {
-    names: ['我', '女友'],
+    names: ['张众', '刘笑'],
     heights: [175, 165],
     anniversary: '2025-01-15',
     weights: [],
@@ -538,8 +529,23 @@ function loadData() {
 }
 
 let D = loadData();
+// Migrate old data
+if (D.names[0] === '我' && D.names[1] === '女友') {
+  D.names = ['张众', '刘笑'];
+  saveData(D);
+}
 function persist() { saveData(D); }
 function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+function updateSelects() {
+  const selects = ['todoPerson', 'msgAuthor', 'weightPerson'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `
+      <option value="0">👦 ${D.names[0]}</option>
+      <option value="1">👧 ${D.names[1]}</option>`;
+  });
+}
 
 // ============ HELPERS ============
 function fmtDate(d) {
@@ -926,6 +932,7 @@ function saveSettings(e) {
   if (newCity !== D.city) { D.city = newCity; }
   persist();
   closeSettings();
+  updateSelects();
   updateTimer();
   renderWeights();
   renderMessages();
@@ -952,6 +959,7 @@ function init() {
   updateTimer();
   setInterval(updateTimer, 1000);
   initWeather();
+  updateSelects();
   renderWeights();
   renderPeriod();
   renderMessages();
