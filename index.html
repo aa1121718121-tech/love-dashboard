@@ -269,7 +269,10 @@ body::before {
   <!-- Header -->
   <div class="header-bar">
     <div class="title"><span class="pink">Love</span> Story</div>
-    <button class="settings-btn" onclick="openSettings()">⚙</button>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="syncDot" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);flex-shrink:0;" title="同步状态"></span>
+      <button class="settings-btn" onclick="openSettings()">⚙</button>
+    </div>
   </div>
 
   <!-- ===== TAB: 首页 ===== -->
@@ -439,7 +442,62 @@ function loadData() {
 let D = loadData();
 if (D.names[0] === '我' && D.names[1] === '女友') { D.names = ['张众', '刘笑']; saveData(D); }
 function persist() { saveData(D); }
-function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); pushToFirebase(); }
+
+// ============ FIREBASE SYNC ============
+const FB_URL = 'https://love-dashboard-2fd19-default-rtdb.firebaseio.com/data.json';
+let FB_VERSION = 0;
+let SYNCING = false;
+
+async function pushToFirebase() {
+  if (SYNCING) return;
+  try {
+    D._version = (D._version || 0) + 1;
+    D._updated = Date.now();
+    await fetch(FB_URL, { method: 'PUT', body: JSON.stringify(D), headers: { 'Content-Type': 'application/json' } });
+    FB_VERSION = D._version;
+    markOnline();
+  } catch(e) { /* offline, ignore */ }
+}
+
+async function pullFromFirebase() {
+  try {
+    const resp = await fetch(FB_URL);
+    if (!resp.ok) return;
+    const remote = await resp.json();
+    if (!remote || !remote._version) return;
+    const rv = remote._version || 0;
+    if (rv > FB_VERSION) {
+      SYNCING = true;
+      FB_VERSION = rv;
+      D = remote;
+      persist();
+      // re-render all
+      refreshAll();
+      SYNCING = false;
+    }
+  } catch(e) { /* offline */ }
+}
+
+function startSync() {
+  setInterval(pullFromFirebase, 3000);
+  pushToFirebase();
+}
+
+function refreshAll() {
+  updateTimer();
+  updateSelects();
+  renderWeights();
+  renderPeriod();
+  renderMessages();
+  renderTodos();
+}
+
+function markOnline() {
+  const el = document.getElementById('syncDot');
+  if (el) el.style.background = '#4caf50';
+  setTimeout(() => { if (el) el.style.background = 'rgba(255,255,255,.3)'; }, 800);
+}
 
 function updateSelects() {
   ['todoPerson', 'msgAuthor', 'weightPerson'].forEach(id => {
@@ -829,6 +887,7 @@ function init() {
   renderMessages();
   renderTodos();
   document.getElementById('periodDate').value = todayStr();
+  startSync();
 }
 init();
 </script>
