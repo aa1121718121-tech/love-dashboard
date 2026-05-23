@@ -324,6 +324,7 @@ body::before {
     <div class="card">
       <div class="card-header"><h2>⚖️ 体重记录</h2></div>
       <div class="weight-dual" id="weightDual"></div>
+      <canvas id="weightChart" style="width:100%;height:200px;margin-top:12px;border-radius:12px;display:none;"></canvas>
       <div class="weight-input-row">
         <input type="number" id="weightInput" placeholder="体重(kg)" step="0.1">
         <select id="weightPerson"></select>
@@ -564,6 +565,106 @@ function renderWeights() {
     const bmi = calcBMI(w.weight, h);
     return `<div class="weight-person-card ${cls}"><div class="w-name">${name}</div><div class="w-val">${w.weight}<span class="w-unit">kg</span></div><div class="w-bmi">BMI ${bmi} · ${bmiCategory(bmi)}</div></div>`;
   }).join('');
+  drawWeightChart();
+}
+
+function drawWeightChart() {
+  const canvas = document.getElementById('weightChart');
+  if (!canvas) return;
+  const w0 = D.weights.filter(w => w.person === 0).slice(-30);
+  const w1 = D.weights.filter(w => w.person === 1).slice(-30);
+  const total = w0.length + w1.length;
+  if (total < 2) { canvas.style.display = 'none'; return; }
+  canvas.style.display = 'block';
+
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 200 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = 200;
+  ctx.clearRect(0, 0, W, H);
+
+  // background
+  ctx.fillStyle = 'rgba(255,255,255,.02)';
+  ctx.fillRect(0, 0, W, H);
+
+  // collect all data points sorted by date
+  const all = [...w0.map(w => ({...w, color: '#4fc3f7', name: D.names[0]})), ...w1.map(w => ({...w, color: '#e91e63', name: D.names[1]}))];
+  all.sort((a,b) => a.date.localeCompare(b.date));
+  if (all.length < 2) { canvas.style.display = 'none'; return; }
+
+  let minW = Infinity, maxW = -Infinity;
+  all.forEach(w => { if (w.weight < minW) minW = w.weight; if (w.weight > maxW) maxW = w.weight; });
+  const pad = Math.max((maxW - minW) * 0.3, 3);
+  minW = Math.floor(minW - pad); maxW = Math.ceil(maxW + pad);
+
+  const padL = 36, padR = 16, padT = 14, padB = 28;
+  const pw = W - padL - padR, ph = H - padT - padB;
+
+  function xOf(d) { return padL + (all.findIndex(a => a.date === d) / Math.max(all.length - 1, 1)) * pw; }
+  function yOf(v) { return padT + ph - ((v - minW) / (maxW - minW)) * ph; }
+
+  // grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = .5;
+  for (let i = 0; i < 5; i++) {
+    const v = minW + (maxW - minW) * i / 4;
+    const y = yOf(v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(v), padL - 6, y + 3);
+  }
+
+  // date labels (show ~5)
+  const step = Math.max(1, Math.floor(all.length / 5));
+  ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.font = '9px sans-serif';
+  for (let i = 0; i < all.length; i += step) {
+    const d = all[i].date.slice(5);
+    ctx.fillText(d, xOf(all[i].date), H - 6);
+  }
+  // last point always
+  if (all.length > 1) {
+    const last = all[all.length-1];
+    ctx.fillText(last.date.slice(5), xOf(last.date), H - 6);
+  }
+
+  // draw lines per person
+  [0, 1].forEach(p => {
+    const pts = all.filter(a => a.person === p);
+    if (pts.length < 1) return;
+    const color = p === 0 ? '#4fc3f7' : '#e91e63';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    pts.forEach((pt, i) => {
+      const x = xOf(pt.date), y = yOf(pt.weight);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // dots
+    pts.forEach(pt => {
+      const x = xOf(pt.date), y = yOf(pt.weight);
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1e1e36';
+      ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
+    });
+  });
+
+  // legend
+  ctx.font = '11px sans-serif';
+  [{name: D.names[0], color: '#4fc3f7'}, {name: D.names[1], color: '#e91e63'}].forEach((l, i) => {
+    const lx = padL + i * 90;
+    ctx.fillStyle = l.color;
+    ctx.beginPath(); ctx.arc(lx + 4, 12, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.textAlign = 'left';
+    ctx.fillText(l.name, lx + 12, 15);
+  });
 }
 
 function addWeight() {
