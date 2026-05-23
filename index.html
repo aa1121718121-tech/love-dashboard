@@ -324,7 +324,7 @@ body::before {
     <div class="card">
       <div class="card-header"><h2>⚖️ 体重记录</h2></div>
       <div class="weight-dual" id="weightDual"></div>
-      <canvas id="weightChart" style="width:100%;height:200px;margin-top:12px;border-radius:12px;display:none;"></canvas>
+      <canvas id="weightChart" style="width:100%;height:200px;margin-top:12px;border-radius:12px;"></canvas>
       <div class="weight-input-row">
         <input type="number" id="weightInput" placeholder="体重(kg)" step="0.1">
         <select id="weightPerson"></select>
@@ -464,13 +464,17 @@ function initStars() {
 }
 
 // ============ TAB NAVIGATION ============
+function switchTab(name) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-item[data-tab="'+name+'"]').classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  // redraw chart when switching to weight tab
+  if (name === 'weight') setTimeout(drawWeightChart, 50);
+}
+
 document.querySelectorAll('.nav-item').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
 // ============ TIMER ============
@@ -571,12 +575,6 @@ function renderWeights() {
 function drawWeightChart() {
   const canvas = document.getElementById('weightChart');
   if (!canvas) return;
-  const w0 = D.weights.filter(w => w.person === 0).slice(-30);
-  const w1 = D.weights.filter(w => w.person === 1).slice(-30);
-  const total = w0.length + w1.length;
-  if (total < 2) { canvas.style.display = 'none'; return; }
-  canvas.style.display = 'block';
-
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width * dpr;
@@ -585,15 +583,21 @@ function drawWeightChart() {
   ctx.scale(dpr, dpr);
   const W = rect.width, H = 200;
   ctx.clearRect(0, 0, W, H);
-
-  // background
   ctx.fillStyle = 'rgba(255,255,255,.02)';
   ctx.fillRect(0, 0, W, H);
 
-  // collect all data points sorted by date
-  const all = [...w0.map(w => ({...w, color: '#4fc3f7', name: D.names[0]})), ...w1.map(w => ({...w, color: '#e91e63', name: D.names[1]}))];
+  const w0 = D.weights.filter(w => w.person === 0).slice(-30);
+  const w1 = D.weights.filter(w => w.person === 1).slice(-30);
+  const all = [...w0.map(w => ({...w})), ...w1.map(w => ({...w}))];
   all.sort((a,b) => a.date.localeCompare(b.date));
-  if (all.length < 2) { canvas.style.display = 'none'; return; }
+
+  if (all.length < 2) {
+    ctx.fillStyle = 'rgba(255,255,255,.2)';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('记录两条以上体重数据后显示曲线', W/2, H/2);
+    return;
+  }
 
   let minW = Infinity, maxW = -Infinity;
   all.forEach(w => { if (w.weight < minW) minW = w.weight; if (w.weight > maxW) maxW = w.weight; });
@@ -603,10 +607,14 @@ function drawWeightChart() {
   const padL = 36, padR = 16, padT = 14, padB = 28;
   const pw = W - padL - padR, ph = H - padT - padB;
 
-  function xOf(d) { return padL + (all.findIndex(a => a.date === d) / Math.max(all.length - 1, 1)) * pw; }
+  function xOf(d) {
+    for (let i = 0; i < all.length; i++) {
+      if (all[i].date === d) return padL + (i / Math.max(all.length - 1, 1)) * pw;
+    }
+    return padL;
+  }
   function yOf(v) { return padT + ph - ((v - minW) / (maxW - minW)) * ph; }
 
-  // grid lines
   ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = .5;
   for (let i = 0; i < 5; i++) {
     const v = minW + (maxW - minW) * i / 4;
@@ -616,23 +624,19 @@ function drawWeightChart() {
     ctx.fillText(Math.round(v), padL - 6, y + 3);
   }
 
-  // date labels (show ~5)
   const step = Math.max(1, Math.floor(all.length / 5));
   ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.font = '9px sans-serif';
   for (let i = 0; i < all.length; i += step) {
-    const d = all[i].date.slice(5);
-    ctx.fillText(d, xOf(all[i].date), H - 6);
+    ctx.fillText(all[i].date.slice(5), xOf(all[i].date), H - 6);
   }
-  // last point always
   if (all.length > 1) {
     const last = all[all.length-1];
     ctx.fillText(last.date.slice(5), xOf(last.date), H - 6);
   }
 
-  // draw lines per person
   [0, 1].forEach(p => {
     const pts = all.filter(a => a.person === p);
-    if (pts.length < 1) return;
+    if (pts.length < 2) return;
     const color = p === 0 ? '#4fc3f7' : '#e91e63';
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -644,8 +648,6 @@ function drawWeightChart() {
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.stroke();
-
-    // dots
     pts.forEach(pt => {
       const x = xOf(pt.date), y = yOf(pt.weight);
       ctx.fillStyle = color;
@@ -655,7 +657,6 @@ function drawWeightChart() {
     });
   });
 
-  // legend
   ctx.font = '11px sans-serif';
   [{name: D.names[0], color: '#4fc3f7'}, {name: D.names[1], color: '#e91e63'}].forEach((l, i) => {
     const lx = padL + i * 90;
